@@ -11,7 +11,9 @@ use std::collections::HashMap;
 pub mod core;
 pub use crate::core::functions::{ExtraInterface};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
+pub use crate::core::storage_utils::get_mongo_test;
 use data_getter::ResultParse;
+use bson::ordered::OrderedDocument;
 
 
 
@@ -31,5 +33,11 @@ impl ApiInterface {
     pub fn get_tree(app_type: &str, config: HashMap<String, String>, force_update: bool) -> Result<serde_yaml::Value, io::Error> {
         let params = TreeParams::build_params(&config, app_type);
         ExtraInterface::get_tree(params, force_update)
+    }
+
+
+    /// ONLY FOR TEST !
+    pub fn get_storage_test() -> serde_json::Value {
+        get_mongo_test()
     }
 }

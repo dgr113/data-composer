@@ -1,4 +1,4 @@
-/** For <mongodb> crate version 0.4.0 only **/
+/** For <mongodb> version 0.4.0 only **/
 
 use std::fs;
 
@@ -48,9 +48,16 @@ fn mongo_get(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument>
 }
 
 
+fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
+    let results = serde_json::to_string(&results).unwrap();
+    let results: serde_json::Value = serde_json::from_str(&results).unwrap();
+    results
+}
 
 
-fn main() {
+
+
+pub(crate) fn get_mongo_test() -> serde_json::Value {
     let mongo_uri = "mongodb://localhost:27017";
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
@@ -60,11 +67,10 @@ fn main() {
 
     mongo_save(&mongo_coll, data, "data");
 
-//    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": 10}"#).unwrap();
     let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
     let filter: bson::Bson = filter_value.into();
     let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
 
     let results = mongo_get(&mongo_coll, filter.clone());
-    println!("{:?}", results);
+    mongo_convert_test(results)
 }
