@@ -1,4 +1,9 @@
+/** For <mongodb> crate version 0.4.0 only **/
+
 use std::fs;
+
+use crate::mongodb::ThreadedClient;
+use crate::mongodb::db::ThreadedDatabase;
 
 use serde_json::Value;
 use bson::ordered::OrderedDocument;
@@ -21,8 +26,8 @@ fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 
 
 fn mongo_get_coll(mongo_uri: &str, db_name: &str, coll_name: &str) -> Collection {
-    let client =  Client::with_uri_str(&mongo_uri).ok().expect("Failed to initialize client!");
-    let db = client.database(db_name);
+    let client =  Client::with_uri(&mongo_uri).ok().expect("Failed to initialize client!");
+    let db = client.db(db_name);
     db.collection(coll_name)
 }
 
@@ -45,7 +50,7 @@ fn mongo_get(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument>
 
 
 
-pub fn main_test() {
+fn main() {
     let mongo_uri = "mongodb://localhost:27017";
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
