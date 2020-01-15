@@ -1,8 +1,9 @@
 use std::fs;
 
 use serde_json::Value;
-use mongodb::{Client, Collection};
 use bson::ordered::OrderedDocument;
+use mongodb::coll::Collection;
+use mongodb::Client;
 
 
 
@@ -35,7 +36,7 @@ fn mongo_save(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
 
 
 fn mongo_get(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
-    match coll.find(filter, None) {
+    match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
         Err(_err) => Vec::new()
     }
