@@ -1,3 +1,5 @@
+extern crate bson;
+extern crate mongodb;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate data_finder;
