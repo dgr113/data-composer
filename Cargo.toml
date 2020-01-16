@@ -10,17 +10,12 @@ log = "0.4.8"
 serde_json = "1.0.41"
 serde_yaml = "0.8.11"
 
+mongodb = "0.4.0"
+bson = "0.14.0"
+
 #mongodb = { version = "0.4.0", features = ["ssl"] }
 #bson = "0.14.0"
-
-mongodb = { version = "0.4.0", features = ["ssl"] }
-bson = "0.14.0"
-data-composer = { git = "https://github.com/pewpew79/data-composer.git", branch = "change_storage_to_mongo" }
-openssl-sys = "*"
+#openssl-sys = "*"
 
 data-finder = { git = "https://github.com/pewpew79/data-finder.git", branch = "master" }
 data-getter = { git = "https://github.com/pewpew79/data-getter.git", branch = "master" }
-
-
-[features]
-vendored = ["openssl-sys/vendored"]

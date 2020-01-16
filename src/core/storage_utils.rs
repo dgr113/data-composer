@@ -26,7 +26,8 @@ fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 
 
 fn mongo_get_coll(mongo_uri: &str, db_name: &str, coll_name: &str) -> Collection {
-    let client =  Client::with_uri(&mongo_uri).ok().expect("Failed to initialize client!");
+//    let client =  Client::with_uri(&mongo_uri).ok().expect("Failed to initialize client!");
+    let client = Client::connect("localhost", 27017).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
 }
