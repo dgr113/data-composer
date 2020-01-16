@@ -14,16 +14,17 @@ pub struct ExtraInterface {}
 impl ExtraInterface {
 
     /// Check state for update tree
-    pub fn get_tree(tree_params: TreeParams, is_force_update: bool) -> Result<serde_yaml::Value, io::Error> {
-        match is_force_update || !Path::new(&tree_params.save_path).exists() {
+    pub fn get_tree(tree_params: TreeParams) -> Result<serde_yaml::Value, io::Error> {
+        match !Path::new(&tree_params.save_path).exists() {
             true => IntroInterface::update_tree(&tree_params),
+
             false => fs::read_to_string(tree_params.save_path).and_then(parse_yaml)
         }
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, is_force_update: bool) -> ResultParse<serde_json::Value> {
-        match is_force_update || !Path::new(&brief_params.save_path).exists() {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
+        match !Path::new(&brief_params.save_path).exists() {
             true => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
 
             false => fs::read_to_string(&brief_params.save_path)

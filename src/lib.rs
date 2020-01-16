@@ -21,18 +21,18 @@ pub struct ApiInterface {}
 
 impl ApiInterface {
     /// Get a brief description of a given content type
-    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, force_update: bool) -> ResultParse<serde_json::Value> {
+    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>) -> ResultParse<serde_json::Value> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type,  access_key);
-        ExtraInterface::get_full(tree_params, brief_params, "mapping", force_update)
+        ExtraInterface::get_full(tree_params, brief_params, "mapping")
     }
 
 
     /// Get a brief description of a given content type
-    pub fn get_tree(app_type: &str, config: HashMap<String, String>, force_update: bool) -> Result<serde_yaml::Value, io::Error> {
+    pub fn get_tree(app_type: &str, config: HashMap<String, String>) -> Result<serde_yaml::Value, io::Error> {
         let params = TreeParams::build_params(&config, app_type);
-        ExtraInterface::get_tree(params, force_update)
+        ExtraInterface::get_tree(params)
     }
 
 
