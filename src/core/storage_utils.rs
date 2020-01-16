@@ -60,51 +60,38 @@ fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
 pub fn get_mongo_test(db_host: &str, db_port: u16) -> serde_json::Value {
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
-
     let mongo_coll = mongo_get_coll(db_host, db_port, mongo_db_name, mongo_db_coll);
 
-////    let data = read_json("test.json");
-//    let data = r#"
-//        {
-//          "data": [
-//            {
-//              "name": "John Doe",
-//              "age": 43,
-//              "phones": [
-//                10,
-//                50
-//              ]
-//            },
-//            {
-//              "name": "Augistene Vene",
-//              "age": 15,
-//              "phones": [
-//                60,
-//                70
-//              ]
-//            }
-//          ]
-//        }"#;
-//    let data: Value = serde_json::from_str(data).unwrap();
+//    let data = read_json("test.json");
+    let data = r#"
+        {
+          "data": [
+            {
+              "name": "John Doe",
+              "age": 43,
+              "phones": [
+                10,
+                50
+              ]
+            },
+            {
+              "name": "Augistene Vene",
+              "age": 15,
+              "phones": [
+                60,
+                70
+              ]
+            }
+          ]
+        }"#;
+    let data: Value = serde_json::from_str(data).unwrap();
 
+    mongo_save(&mongo_coll, data, "data");
 
-    let filter_value: serde_json::Value = serde_json::from_str(r#"{}"#).unwrap();
-    filter_value
+    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
+    let filter: bson::Bson = filter_value.into();
+    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
 
-
-//    let filter: bson::Bson = filter_value.into();
-//    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
-//    let results = mongo_get(&mongo_coll, filter.clone());
-//    mongo_convert_test(results)
-
-
-
-//    mongo_save(&mongo_coll, data, "data");
-//
-//    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-//    let filter: bson::Bson = filter_value.into();
-//    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
-//
-//    let results = mongo_get(&mongo_coll, filter.clone());
-//    mongo_convert_test(results)
+    let results = mongo_get(&mongo_coll, filter.clone());
+    mongo_convert_test(results)
 }
