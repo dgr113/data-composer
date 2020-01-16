@@ -24,7 +24,8 @@ impl ExtraInterface {
 
 
     pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
-        match !Path::new(&brief_params.save_path).exists() {
+//       match !Path::new(&brief_params.save_path).exists() {
+         match !Path::new(&brief_params.save_path).exists() {
             true => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
 
             false => fs::read_to_string(&brief_params.save_path)

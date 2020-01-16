@@ -12,27 +12,27 @@ use mongodb::Client;
 
 
 
-fn read_json(file_path: &str) -> serde_json::Value {
+pub fn read_json(file_path: &str) -> serde_json::Value {
     fs::read_to_string(file_path).and_then(
         |content| Ok(serde_json::from_str(&content).expect("Error convert JSON string into Value!"))
     ).unwrap_or(Value::Null)
 }
 
 
-fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
+pub fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
     let result: bson::Bson = d.clone().into();  // Maybe need to optimize ...
     result.as_document().expect("Error converting JSON Value into Bson filter!").clone()
 }
 
 
-fn mongo_get_coll(db_host: &str, db_port: u16, db_name: &str, coll_name: &str) -> Collection {
+pub fn mongo_get_coll(db_host: &str, db_port: u16, db_name: &str, coll_name: &str) -> Collection {
     let client = Client::connect(db_host, db_port).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
 }
 
 
-fn mongo_save(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
+pub fn mongo_save_data(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
     let docs: Vec<OrderedDocument> = data[data_root_key].as_array().unwrap().iter()
         .map(convert_to_doc).collect();
 
@@ -40,7 +40,7 @@ fn mongo_save(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
 }
 
 
-fn mongo_get(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
+pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
     match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
         Err(_err) => Vec::new()
@@ -48,10 +48,20 @@ fn mongo_get(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument>
 }
 
 
-fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
+/** Convert MongoDB data results into serde_json Value **/
+pub fn mongo_convert_results(results: Vec<OrderedDocument>) -> serde_json::Value {
     let results = serde_json::to_string(&results).unwrap();
     let results: serde_json::Value = serde_json::from_str(&results).unwrap();
     results
+}
+
+
+/** Checking whether the collection exists in this database **/
+pub fn check_coll_exists(coll: Collection) -> bool {
+    match coll.find_one(Some(OrderedDocument::new()), None) {
+        Ok(t) => t.is_some(),
+        Err(err) => false
+    }
 }
 
 
@@ -86,12 +96,12 @@ pub fn get_mongo_test(db_host: &str, db_port: u16) -> serde_json::Value {
         }"#;
     let data: Value = serde_json::from_str(data).unwrap();
 
-    mongo_save(&mongo_coll, data, "data");
+    mongo_save_data(&mongo_coll, data, "data");
 
     let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
     let filter: bson::Bson = filter_value.into();
     let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
 
-    let results = mongo_get(&mongo_coll, filter.clone());
-    mongo_convert_test(results)
+    let results = mongo_get_data(&mongo_coll, filter.clone());
+    mongo_convert_results(results)
 }

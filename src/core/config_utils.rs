@@ -25,7 +25,7 @@ impl<'a> TreeParams<'a> {
 
 pub struct BriefParams<'a> {
     pub tree_path: String,
-    pub save_path: String,
+    pub tmp_db_uri: String,
     pub order_path: String,
     pub brief_fields: Vec<String>,
     pub access_key: &'a [&'a str]
@@ -34,13 +34,13 @@ pub struct BriefParams<'a> {
 impl<'a> BriefParams<'a> {
     pub fn build_params(config: &'a HashMap<String, String>, app_type: &'a str, access_key: &'a [&'a str]) -> BriefParams<'a> {
         let tree_path = build_path(&config["TREES_BASEDIR"], &build_filename(&app_type,None, "yml", "."));
-        let save_path = build_path(&config["BRIEFS_BASEDIR"], &build_filename(&app_type, Some(access_key), "json", "."));
         let order_path = build_path(&config["ORDERS_BASEDIR"], &build_filename(&app_type, None, "order", "."));
+        let tmp_db_uri = ( &config["TMP_DB_URI"] ).clone();
 
         let brief_fields = &config["BRIEFLY_FIELDS"].as_str().split(",").map(|s| s.trim().to_string()).collect::<Vec<String>>();
         BriefParams {
             tree_path,
-            save_path,
+            tmp_db_uri,
             order_path,
             access_key,
             brief_fields: brief_fields.to_vec(),
