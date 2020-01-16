@@ -57,9 +57,7 @@ fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
 
 
 
-pub fn get_mongo_test() -> serde_json::Value {
-    let db_host = "irs-cache";
-    let db_port = 27017;
+pub fn get_mongo_test(db_host: &str, db_port: i32) -> serde_json::Value {
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
 
