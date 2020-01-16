@@ -25,9 +25,8 @@ fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 }
 
 
-fn mongo_get_coll(mongo_uri: &str, db_name: &str, coll_name: &str) -> Collection {
-//    let client =  Client::with_uri(&mongo_uri).ok().expect("Failed to initialize client!");
-    let client = Client::connect("0.0.0.0", 27017).expect("Error: Failed to initialize MongoDb client!");
+fn mongo_get_coll(db_host: &str, db_port: i32, db_name: &str, coll_name: &str) -> Collection {
+    let client = Client::connect(db_host, db_port).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
 }
@@ -59,43 +58,46 @@ fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
 
 
 pub fn get_mongo_test() -> serde_json::Value {
-    let mongo_uri = "mongodb://irs-cache:27017";
+    let db_host = "irs-cache";
+    let db_port = 27017;
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
 
-    let mongo_coll = mongo_get_coll(mongo_uri, mongo_db_name, mongo_db_coll);
+    let mongo_coll = mongo_get_coll(db_host, db_port, mongo_db_name, mongo_db_coll);
 
-//    let data = read_json("test.json");
-    let data = r#"
-        {
-          "data": [
-            {
-              "name": "John Doe",
-              "age": 43,
-              "phones": [
-                10,
-                50
-              ]
-            },
-            {
-              "name": "Augistene Vene",
-              "age": 15,
-              "phones": [
-                60,
-                70
-              ]
-            }
-          ]
-        }"#;
-    let data: Value = serde_json::from_str(data).unwrap();
-
+////    let data = read_json("test.json");
+//    let data = r#"
+//        {
+//          "data": [
+//            {
+//              "name": "John Doe",
+//              "age": 43,
+//              "phones": [
+//                10,
+//                50
+//              ]
+//            },
+//            {
+//              "name": "Augistene Vene",
+//              "age": 15,
+//              "phones": [
+//                60,
+//                70
+//              ]
+//            }
+//          ]
+//        }"#;
+//    let data: Value = serde_json::from_str(data).unwrap();
 
 
     let filter_value: serde_json::Value = serde_json::from_str(r#"{}"#).unwrap();
-    let filter: bson::Bson = filter_value.into();
-    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
-    let results = mongo_get(&mongo_coll, filter.clone());
-    mongo_convert_test(results)
+    filter_value
+
+
+//    let filter: bson::Bson = filter_value.into();
+//    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
+//    let results = mongo_get(&mongo_coll, filter.clone());
+//    mongo_convert_test(results)
 
 
 
