@@ -89,6 +89,16 @@ pub fn get_mongo_test() -> serde_json::Value {
         }"#;
     let data: Value = serde_json::from_str(data).unwrap();
 
+
+
+    let filter_value: serde_json::Value = serde_json::from_str(r#"{}"#).unwrap();
+    let filter: bson::Bson = filter_value.into();
+    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
+    let results = mongo_get(&mongo_coll, filter.clone());
+    mongo_convert_test(results)
+
+
+
 //    mongo_save(&mongo_coll, data, "data");
 //
 //    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
@@ -97,6 +107,4 @@ pub fn get_mongo_test() -> serde_json::Value {
 //
 //    let results = mongo_get(&mongo_coll, filter.clone());
 //    mongo_convert_test(results)
-
-    data
 }
