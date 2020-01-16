@@ -25,7 +25,7 @@ fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 }
 
 
-fn mongo_get_coll(db_host: &str, db_port: i16, db_name: &str, coll_name: &str) -> Collection {
+fn mongo_get_coll(db_host: &str, db_port: u16, db_name: &str, coll_name: &str) -> Collection {
     let client = Client::connect(db_host, db_port).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
@@ -57,7 +57,7 @@ fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
 
 
 
-pub fn get_mongo_test(db_host: &str, db_port: i16) -> serde_json::Value {
+pub fn get_mongo_test(db_host: &str, db_port: u16) -> serde_json::Value {
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
 
