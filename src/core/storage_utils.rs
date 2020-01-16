@@ -25,13 +25,14 @@ pub fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 }
 
 
-pub fn mongo_get_coll(db_host: &str, db_port: u16, db_name: &str, coll_name: &str) -> Collection {
-    let client = Client::connect(db_host, db_port).expect("Error: Failed to initialize MongoDb client!");
+pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collection {
+    let client = Client::with_uri(db_uri).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
 }
 
 
+/** Save data into MongoDB **/
 pub fn mongo_save_data(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
     let docs: Vec<OrderedDocument> = data[data_root_key].as_array().unwrap().iter()
         .map(convert_to_doc).collect();
@@ -40,6 +41,7 @@ pub fn mongo_save_data(coll: &Collection, data: serde_json::Value, data_root_key
 }
 
 
+/** Get data from MongoDB **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
     match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
@@ -66,34 +68,9 @@ pub fn check_coll_exists(coll: Collection) -> bool {
 
 
 
+pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) -> serde_json::Value {
+    let mongo_coll = mongo_get_coll(db_uri, db_name, db_coll);
 
-pub fn get_mongo_test(db_host: &str, db_port: u16) -> serde_json::Value {
-    let mongo_db_name = "test_db";
-    let mongo_db_coll = "test_coll";
-    let mongo_coll = mongo_get_coll(db_host, db_port, mongo_db_name, mongo_db_coll);
-
-//    let data = read_json("test.json");
-    let data = r#"
-        {
-          "data": [
-            {
-              "name": "John Doe",
-              "age": 43,
-              "phones": [
-                10,
-                50
-              ]
-            },
-            {
-              "name": "Augistene Vene",
-              "age": 15,
-              "phones": [
-                60,
-                70
-              ]
-            }
-          ]
-        }"#;
     let data: Value = serde_json::from_str(data).unwrap();
 
     mongo_save_data(&mongo_coll, data, "data");
