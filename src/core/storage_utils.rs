@@ -27,7 +27,7 @@ fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
 
 fn mongo_get_coll(mongo_uri: &str, db_name: &str, coll_name: &str) -> Collection {
 //    let client =  Client::with_uri(&mongo_uri).ok().expect("Failed to initialize client!");
-    let client = Client::connect("localhost", 27017).expect("Error: Failed to initialize MongoDb client!");
+    let client = Client::connect("0.0.0.0", 27017).expect("Error: Failed to initialize MongoDb client!");
     let db = client.db(db_name);
     db.collection(coll_name)
 }
@@ -89,12 +89,14 @@ pub fn get_mongo_test() -> serde_json::Value {
         }"#;
     let data: Value = serde_json::from_str(data).unwrap();
 
-    mongo_save(&mongo_coll, data, "data");
+//    mongo_save(&mongo_coll, data, "data");
+//
+//    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
+//    let filter: bson::Bson = filter_value.into();
+//    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
+//
+//    let results = mongo_get(&mongo_coll, filter.clone());
+//    mongo_convert_test(results)
 
-    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-    let filter: bson::Bson = filter_value.into();
-    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
-
-    let results = mongo_get(&mongo_coll, filter.clone());
-    mongo_convert_test(results)
+    data
 }
