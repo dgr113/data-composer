@@ -59,7 +59,7 @@ fn mongo_convert_test(results: Vec<OrderedDocument>) -> serde_json::Value {
 
 
 pub fn get_mongo_test() -> serde_json::Value {
-    let mongo_uri = "mongodb://0.0.0.0:27017";
+    let mongo_uri = "mongodb://irs-cache:27017";
     let mongo_db_name = "test_db";
     let mongo_db_coll = "test_coll";
 
