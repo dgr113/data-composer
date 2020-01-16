@@ -37,7 +37,7 @@ impl ApiInterface {
 
 
     /// ONLY FOR TEST !
-    pub fn get_storage_test(db_host: &str, db_port: i32) -> serde_json::Value {
+    pub fn get_storage_test(db_host: &str, db_port: i16) -> serde_json::Value {
         get_mongo_test(db_host, db_port)
     }
 }
