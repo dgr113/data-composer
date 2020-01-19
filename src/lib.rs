@@ -21,7 +21,7 @@ pub struct ApiInterface {}
 
 impl ApiInterface {
     /// Get a brief description of a given content type
-    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: serde_json::Value) -> ResultParse<serde_json::Value> {
+    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<serde_json::Value>) -> ResultParse<serde_json::Value> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type, access_key);

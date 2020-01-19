@@ -9,7 +9,7 @@ use serde_json::Value;
 use bson::ordered::OrderedDocument;
 use mongodb::coll::Collection;
 use mongodb::Client;
-
+use std::collections::HashMap;
 
 
 pub fn read_json(file_path: &str) -> serde_json::Value {
@@ -19,9 +19,14 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-pub fn convert_to_doc(d: &serde_json::Value) -> OrderedDocument {
-    let result: bson::Bson = d.clone().into();  // Maybe need to optimize ...
-    result.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+pub fn convert_to_doc(d: &Option<serde_json::Value>) -> OrderedDocument {
+    match d {
+        Some(t) => {
+            let result: bson::Bson = d.clone().into();  // Maybe need to optimize ...
+            result.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+        },
+        None => serde_json::Value::from(HashMap::new())
+    }
 }
 
 
@@ -76,7 +81,7 @@ pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) ->
     mongo_save_data(&mongo_coll, data, "data");
 
     let filter_data: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-    let filter = convert_to_doc(&filter_data);
+    let filter = convert_to_doc(&Ok(filter_data));
 
     let results = mongo_get_data(&mongo_coll, filter.clone());
     mongo_convert_results(results)

@@ -22,7 +22,7 @@ impl ExtraInterface {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: serde_json::Value) -> ResultParse<serde_json::Value> {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<serde_json::Value>) -> ResultParse<serde_json::Value> {
         let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
         let filter = convert_to_doc(&filter);
 
