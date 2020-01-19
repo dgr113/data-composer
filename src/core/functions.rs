@@ -6,7 +6,7 @@ use data_getter::ResultParse;
 use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
 use crate::core::common_utils::{get_dummy_error};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
-
+use crate::core::storage_utils::{mongo_get_coll, check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results};
 
 
 pub struct ExtraInterface {}
@@ -17,20 +17,21 @@ impl ExtraInterface {
     pub fn get_tree(tree_params: TreeParams) -> Result<serde_yaml::Value, io::Error> {
         match !Path::new(&tree_params.save_path).exists() {
             true => IntroInterface::update_tree(&tree_params),
-
             false => fs::read_to_string(tree_params.save_path).and_then(parse_yaml)
         }
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
-//       match !Path::new(&brief_params.save_path).exists() {
-         match !Path::new(&brief_params.save_path).exists() {
-            true => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: serde_json::Value) -> ResultParse<serde_json::Value> {
+        let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
+        let filter = convert_to_doc(&filter);
 
-            false => fs::read_to_string(&brief_params.save_path)
-                .map_err(|err| err.to_string())
-                .and_then(parse_json)
+        match check_coll_exists(&coll) {
+            false => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
+            true => {
+                let results = mongo_get_data(&coll, filter);
+                mongo_convert_results(results)
+            }
         }
     }
 

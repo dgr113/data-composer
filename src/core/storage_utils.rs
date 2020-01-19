@@ -59,7 +59,7 @@ pub fn mongo_convert_results(results: Vec<OrderedDocument>) -> serde_json::Value
 
 
 /** Checking whether the collection exists in this database **/
-pub fn check_coll_exists(coll: Collection) -> bool {
+pub fn check_coll_exists(coll: &Collection) -> bool {
     match coll.find_one(Some(OrderedDocument::new()), None) {
         Ok(t) => t.is_some(),
         Err(err) => false
@@ -75,9 +75,8 @@ pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) ->
 
     mongo_save_data(&mongo_coll, data, "data");
 
-    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-    let filter: bson::Bson = filter_value.into();
-    let filter = filter.as_document().expect("Error converting JSON Value into Bson filter!");
+    let filter_data: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
+    let filter = convert_to_doc(&filter_data);
 
     let results = mongo_get_data(&mongo_coll, filter.clone());
     mongo_convert_results(results)
