@@ -12,6 +12,7 @@ use mongodb::Client;
 use std::collections::HashMap;
 
 
+
 pub fn read_json(file_path: &str) -> serde_json::Value {
     fs::read_to_string(file_path).and_then(
         |content| Ok(serde_json::from_str(&content).expect("Error convert JSON string into Value!"))
@@ -19,13 +20,13 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-pub fn convert_to_doc(d: &Option<serde_json::Value>) -> OrderedDocument {
+pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
     match d {
         Some(t) => {
-            let result: bson::Bson = d.clone().into();  // Maybe need to optimize ...
-            result.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+            let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
+            result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
         },
-        None => serde_json::Value::from(HashMap::new())
+        None => OrderedDocument::new()
     }
 }
 
@@ -37,16 +38,14 @@ pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collectio
 }
 
 
-/** Save data into MongoDB **/
 pub fn mongo_save_data(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
     let docs: Vec<OrderedDocument> = data[data_root_key].as_array().unwrap().iter()
-        .map(convert_to_doc).collect();
+        .map(|d| convert_to_doc(Some(d))).collect();
 
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
 
-/** Get data from MongoDB **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
     match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
@@ -67,22 +66,21 @@ pub fn mongo_convert_results(results: Vec<OrderedDocument>) -> serde_json::Value
 pub fn check_coll_exists(coll: &Collection) -> bool {
     match coll.find_one(Some(OrderedDocument::new()), None) {
         Ok(t) => t.is_some(),
-        Err(err) => false
+        Err(_) => false
     }
 }
 
 
-
+/** ONLY FOR TEST USE **/
 pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) -> serde_json::Value {
-    let mongo_coll = mongo_get_coll(db_uri, db_name, db_coll);
-
+    let coll = mongo_get_coll(db_uri, db_name, db_coll);
     let data: Value = serde_json::from_str(data).unwrap();
 
-    mongo_save_data(&mongo_coll, data, "data");
+    mongo_save_data(&coll, data, "data");
 
-    let filter_data: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-    let filter = convert_to_doc(&Ok(filter_data));
+    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
+    let filter = convert_to_doc(Some(&filter_value));
 
-    let results = mongo_get_data(&mongo_coll, filter.clone());
+    let results = mongo_get_data(&coll, filter.clone());
     mongo_convert_results(results)
 }
