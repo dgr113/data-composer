@@ -2,11 +2,14 @@ use std::path::Path;
 use std::{fs, io};
 use std::collections::HashMap;
 
+use mongodb::coll::Collection;
+
 use data_getter::ResultParse;
 use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
 use crate::core::common_utils::{get_dummy_error};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
-use crate::core::storage_utils::{mongo_get_coll, check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results};
+use crate::core::storage_utils::{mongo_get_coll, check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results, mongo_save_data};
+
 
 
 pub struct ExtraInterface {}
@@ -22,16 +25,13 @@ impl ExtraInterface {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<serde_json::Value>) -> ResultParse<serde_json::Value> {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>) -> ResultParse<serde_json::Value> {
         let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
-        let filter = convert_to_doc(&filter);
+        let filter = convert_to_doc(filter);
 
         match check_coll_exists(&coll) {
-            false => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
-            true => {
-                let results = mongo_get_data(&coll, filter);
-                mongo_convert_results(results)
-            }
+            false => IntroInterface::update_full(&coll, &tree_params, &brief_params, tree_order_key),
+            true => Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
         }
     }
 
@@ -69,7 +69,7 @@ impl IntroInterface {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn update_full(tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
+    fn update_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
         let tree = Self::update_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
@@ -77,15 +77,11 @@ impl IntroInterface {
             .and_then(|result|
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
-                    .and_then(dump_json)
                     .and_then(|v| {
-                        fs::create_dir_all(Path::new(&brief_params.save_path).parent().unwrap());  // Try to create parent directories
-                        fs::write(&brief_params.save_path, v).or_else(|err| {
-                            println!("Error write briefs into file: {}", &err.to_string());
-                            get_dummy_error(err)
-                        });
+                        mongo_save_data(coll, result.clone(), "TESTTESTTEST_ROOT_DATA_KEY");  // Maybe need to optimize !
                         Ok(result)
-                    }).map_err(|err| err.to_string())
+                    })
+                    .map_err(|err| err.to_string())
             )
     }
 
