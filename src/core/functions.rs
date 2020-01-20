@@ -60,28 +60,31 @@ impl ComposerBuild {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
-        data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
+        let result_ = data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|result|
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        let res = if v.is_object() {
-                            Ok( v.as_object().unwrap().values().cloned().collect::<Vec<serde_json::Value>>() )
+                        let mut res: Vec<_>;
+                        if v.is_object() {
+                            res = v.as_object().unwrap().values().cloned().collect::<Vec<serde_json::Value>>();
                         }
                         else if v.is_array() {
-                            Ok( v.as_array().unwrap() )
+                            res = v.as_array().unwrap().iter().cloned().collect::<Vec<serde_json::Value>>();
                         }
                         else {
-                            Ok( vec![v] )
+                            res = vec![v];
                         };
-                        res
+                        Ok(res)
                     })
                     .and_then(|v| {
-                        mongo_save_data(coll, v);  // Maybe need to optimize !
+                        mongo_save_data(coll, &v);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
-            )
+            );
+
+        result_
     }
 
 
