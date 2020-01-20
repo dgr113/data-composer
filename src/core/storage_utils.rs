@@ -54,9 +54,9 @@ pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<Ordered
 
 
 /** Convert MongoDB data results into serde_json Value **/
-pub fn mongo_convert_results(results: Vec<OrderedDocument>) -> serde_json::Value {
+pub fn mongo_convert_results(results: Vec<OrderedDocument>) -> Vec<serde_json::Value> {
     let results = serde_json::to_string(&results).unwrap();
-    let results: serde_json::Value = serde_json::from_str(&results).unwrap();
+    let results: Vec<serde_json::Value> = serde_json::from_str(&results).unwrap();
     results
 }
 
@@ -73,7 +73,7 @@ pub fn check_coll_exists(coll: &Collection) -> bool {
 
 
 /** ONLY FOR TEST USE **/
-pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) -> serde_json::Value {
+pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) -> Vec<serde_json::Value> {
     let coll = mongo_get_coll(db_uri, db_name, db_coll);
     let data: Value = serde_json::from_str(data).unwrap();
 
@@ -89,7 +89,7 @@ pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) ->
         },
         None => {
             println!("Error convert Jsn data into array!");
-            serde_json::Value::Null
+            vec![serde_json::Value::Null]
         }
     }
 }

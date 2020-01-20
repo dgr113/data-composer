@@ -25,7 +25,7 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>) -> ResultParse<serde_json::Value> {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>) -> ResultParse<Vec<serde_json::Value>> {
         let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
         let filter = convert_to_doc(filter);
 
@@ -56,7 +56,7 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<Vec<serde_json::Value>> {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
@@ -65,8 +65,20 @@ impl ComposerBuild {
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        mongo_save_data(coll, result.clone());  // Maybe need to optimize !
-                        Ok(result)
+                        let res = if v.is_object() {
+                            Ok( v.as_object().unwrap().values().cloned().collect::<Vec<serde_json::Value>>() )
+                        }
+                        else if v.is_array() {
+                            Ok( v.as_array().unwrap() )
+                        }
+                        else {
+                            Ok( vec![v] )
+                        };
+                        res
+                    })
+                    .and_then(|v| {
+                        mongo_save_data(coll, v);  // Maybe need to optimize !
+                        Ok(v)
                     })
                     .map_err(|err| err.to_string())
             )
