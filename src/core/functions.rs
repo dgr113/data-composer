@@ -3,23 +3,23 @@ use std::{fs, io};
 use std::collections::HashMap;
 
 use mongodb::coll::Collection;
-
 use data_getter::ResultParse;
-use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
+
 use crate::core::common_utils::{get_dummy_error};
-pub use crate::core::config_utils::{TreeParams, BriefParams};
+use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
 use crate::core::storage_utils::{mongo_get_coll, check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results, mongo_save_data};
+pub use crate::core::config_utils::{TreeParams, BriefParams};
 
 
 
-pub struct ExtraInterface {}
+pub struct ComposerIntro {}
 
-impl ExtraInterface {
+impl ComposerIntro {
 
     /// Check state for update tree
     pub fn get_tree(tree_params: TreeParams) -> Result<serde_yaml::Value, io::Error> {
         match !Path::new(&tree_params.save_path).exists() {
-            true => IntroInterface::update_tree(&tree_params),
+            true => ComposerBuild::get_updated_tree(&tree_params),
             false => fs::read_to_string(tree_params.save_path).and_then(parse_yaml)
         }
     }
@@ -30,7 +30,7 @@ impl ExtraInterface {
         let filter = convert_to_doc(filter);
 
         match check_coll_exists(&coll) {
-            false => IntroInterface::update_full(&coll, &tree_params, &brief_params, tree_order_key),
+            false => ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key),
             true => Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
         }
     }
@@ -44,22 +44,9 @@ impl ExtraInterface {
 
 
 
-struct IntroInterface {}
+struct ComposerBuild {}
 
-impl IntroInterface {
-    /// Get main ordered keys from file or from tree
-    fn get_ordered_keys(tree: serde_yaml::Value, brief_params: &BriefParams, tree_order_key: &str) -> Vec<String> {
-       match fs::read_to_string(&brief_params.order_path) {
-            Ok(content) => content.lines().map(String::from).collect::<Vec<_>>(),
-            Err(_) => {
-                println!("Warning: Assets order file not found! Getting keys from Tree...");
-                let root_mapping: HashMap<String, serde_yaml::Value> = serde_yaml::from_value(tree).expect("Error parse Content Tree mapping (content-machiner)");
-                root_mapping[tree_order_key].as_mapping().expect("Error parse Content Tree mapping (content-machiner)")
-                    .iter().map(|(k, _)| k.as_str().unwrap().to_string()).collect::<Vec<_>>()
-            }
-        }
-    }
-
+impl ComposerBuild {
 
     /// Update brief (if needed)
     ///
@@ -69,8 +56,8 @@ impl IntroInterface {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn update_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
-        let tree = Self::update_tree(tree_params).expect("Error with create tree on full-update stage!");
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
+        let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
         data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
@@ -94,7 +81,7 @@ impl IntroInterface {
     /// `sniffer_config_path`: Path to sniffer for build tree
     /// `app_type`: App type for access sniffer settings in config
     ///
-    fn update_tree(params: &TreeParams) -> Result<serde_yaml::Value, io::Error> {
+    fn get_updated_tree(params: &TreeParams) -> Result<serde_yaml::Value, io::Error> {
         let result = data_finder::run(params.sniffer_config_path, params.app_type);  // Run ext sniffer
 
         serde_yaml::to_value(&result)

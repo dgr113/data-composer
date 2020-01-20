@@ -9,7 +9,7 @@ use std::io;
 use std::collections::HashMap;
 
 pub mod core;
-pub use crate::core::functions::{ExtraInterface};
+pub use crate::core::functions::{ComposerIntro};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
 pub use crate::core::storage_utils::get_mongo_test;
 use data_getter::ResultParse;
@@ -17,22 +17,22 @@ use bson::ordered::OrderedDocument;
 
 
 
-pub struct ApiInterface {}
+pub struct ComposerApi {}
 
-impl ApiInterface {
+impl ComposerApi {
     /// Get a brief description of a given content type
     pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<&serde_json::Value>) -> ResultParse<serde_json::Value> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type, access_key);
-        ExtraInterface::get_full(tree_params, brief_params, "mapping", filter)
+        ComposerIntro::get_full(tree_params, brief_params, "mapping", filter)
     }
 
 
     /// Get a brief description of a given content type
     pub fn get_tree(app_type: &str, config: HashMap<String, String>) -> Result<serde_yaml::Value, io::Error> {
         let params = TreeParams::build_params(&config, app_type);
-        ExtraInterface::get_tree(params)
+        ComposerIntro::get_tree(params)
     }
 
 
