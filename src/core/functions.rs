@@ -65,7 +65,7 @@ impl ComposerBuild {
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        mongo_save_data(coll, result.clone(), "TESTTESTTEST_ROOT_DATA_KEY");  // Maybe need to optimize !
+                        mongo_save_data(coll, result.clone());  // Maybe need to optimize !
                         Ok(result)
                     })
                     .map_err(|err| err.to_string())
