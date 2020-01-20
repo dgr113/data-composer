@@ -2,14 +2,13 @@
 
 use std::fs;
 
-use crate::mongodb::ThreadedClient;
-use crate::mongodb::db::ThreadedDatabase;
-
 use serde_json::Value;
 use bson::ordered::OrderedDocument;
 use mongodb::coll::Collection;
 use mongodb::Client;
-use std::collections::HashMap;
+
+use crate::mongodb::ThreadedClient;
+use crate::mongodb::db::ThreadedDatabase;
 
 
 
@@ -38,8 +37,8 @@ pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collectio
 }
 
 
-pub fn mongo_save_data(coll: &Collection, data: serde_json::Value, data_root_key: &str) {
-    let docs: Vec<OrderedDocument> = data[data_root_key].as_array().unwrap().iter()
+pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value]) {
+    let docs: Vec<OrderedDocument> = arr_data.iter()
         .map(|d| convert_to_doc(Some(d))).collect();
 
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
@@ -71,16 +70,26 @@ pub fn check_coll_exists(coll: &Collection) -> bool {
 }
 
 
+
+
 /** ONLY FOR TEST USE **/
 pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) -> serde_json::Value {
     let coll = mongo_get_coll(db_uri, db_name, db_coll);
     let data: Value = serde_json::from_str(data).unwrap();
 
-    mongo_save_data(&coll, data, "data");
+    match data["data"].as_array() {
+        Some(data_arr) => {
+            mongo_save_data(&coll, &data_arr);
 
-    let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-    let filter = convert_to_doc(Some(&filter_value));
+            let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
+            let filter = convert_to_doc(Some(&filter_value));
 
-    let results = mongo_get_data(&coll, filter.clone());
-    mongo_convert_results(results)
+            let results = mongo_get_data(&coll, filter.clone());
+            mongo_convert_results(results)
+        },
+        None => {
+            println!("Error convert Jsn data into array!");
+            serde_json::Value::Null
+        }
+    }
 }
