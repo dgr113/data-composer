@@ -48,6 +48,19 @@ struct ComposerBuild {}
 
 impl ComposerBuild {
 
+    /** Convert serde_json Value into vector or values (for later conversion in BSON docs) **/
+    fn prepare_value(v: serde_json::Value, try_convert: bool) -> Vec<serde_json::Value> {
+        let mut res = Vec::new();
+        if try_convert {
+            if v.is_object() { res = v.as_object().unwrap().values().cloned().collect(); }
+            else if v.is_array() { res = v.as_array().unwrap().iter().cloned().collect(); }
+            else { res.push(v); }
+        }
+        else { res.push(v); }
+
+        res
+    }
+
     /// Update brief (if needed)
     ///
     /// # Parameters:
@@ -65,17 +78,7 @@ impl ComposerBuild {
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        let mut res: Vec<_>;
-                        if v.is_object() {
-                            res = v.as_object().unwrap().values().cloned().collect::<Vec<serde_json::Value>>();
-                        }
-                        else if v.is_array() {
-                            res = v.as_array().unwrap().iter().cloned().collect::<Vec<serde_json::Value>>();
-                        }
-                        else {
-                            res = vec![v];
-                        };
-                        Ok(res)
+                        Ok( Self::prepare_value(v, true) )
                     })
                     .and_then(|v| {
                         mongo_save_data(coll, &v);  // Maybe need to optimize !
