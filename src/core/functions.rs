@@ -25,12 +25,12 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>) -> ResultParse<Vec<serde_json::Value>> {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
         let filter = convert_to_doc(filter);
 
         match check_coll_exists(&coll) {
-            false => ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key),
+            false => ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key, id_key),
             true => Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
         }
     }
@@ -69,7 +69,7 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<Vec<serde_json::Value>> {
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
@@ -81,7 +81,7 @@ impl ComposerBuild {
                         Ok( Self::prepare_value(v, true) )
                     })
                     .and_then(|v| {
-                        mongo_save_data(coll, &v);  // Maybe need to optimize !
+                        mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
