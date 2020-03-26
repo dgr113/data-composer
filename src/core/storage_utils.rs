@@ -39,7 +39,7 @@ pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collectio
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
         .map(|d| convert_to_doc(Some(d)))
-        // WRONG FRAGMENT START
+        // POTENTIALLY WRONG FRAGMENT START
         // .map(|mut d| {
         //     //// Maybe need to be optimize ...
         //     if let Some(id_) = id_field {
@@ -53,7 +53,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
         // WRONG FRAGMENT END
         .collect();
 
-    // coll.insert_many(docs, None).expect("Error write doc into Mongo!");
+    coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
 

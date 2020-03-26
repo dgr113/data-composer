@@ -80,10 +80,10 @@ impl ComposerBuild {
                     .and_then(|v| {
                         Ok( Self::prepare_value(v, true) )
                     })
-                    .and_then(|v| {
-                        mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
-                        Ok(v)
-                    })
+                    // .and_then(|v| {
+                    //     mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
+                    //     Ok(v)
+                    // })
                     .map_err(|err| err.to_string())
             );
 
