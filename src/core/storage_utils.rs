@@ -59,11 +59,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
 
 /**  Get docs from MongoDB by filter (if needed) **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
-    // match coll.find(Some(filter), None) {
-    //     Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
-    //     Err(_err) => Vec::new()
-    // }
-    match coll.find(None, None) {
+    match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
         Err(_err) => Vec::new()
     }
@@ -96,7 +92,8 @@ pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) ->
 
     match data["data"].as_array() {
         Some(data_arr) => {
-            mongo_save_data(&coll, &data_arr, Some("id"));
+            // mongo_save_data(&coll, &data_arr, Some("id"));
+            mongo_save_data(&coll, &data_arr, None);
 
             let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
             let filter = convert_to_doc(Some(&filter_value));
