@@ -1,5 +1,3 @@
-/** For <mongodb> version 0.4.0 only **/
-
 use std::fs;
 
 use serde_json::Value;
@@ -37,14 +35,27 @@ pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collectio
 }
 
 
-pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value]) {
-    let docs: Vec<OrderedDocument> = arr_data.iter()
-        .map(|d| convert_to_doc(Some(d))).collect();
+/**  Save docs into MongoDB and optional set ID (id needed and exists) **/
+pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
+    let docs: Vec<OrderedDocument> = arr_data.clone().iter()
+        .map(|d| convert_to_doc(Some(d)))
+        .map(|mut d| {
+            //// Maybe need to be optimize ...
+            if let Some(id_) = id_field {
+                if d.contains_key(id_) {
+                    d.insert("_id", d.get(id_).unwrap().clone());
+                }
+            }
+            d
+            ////
+        })
+        .collect();
 
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
 
+/**  Get docs from MongoDB by filter (if needed) **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
     match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
@@ -79,7 +90,7 @@ pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str) ->
 
     match data["data"].as_array() {
         Some(data_arr) => {
-            mongo_save_data(&coll, &data_arr);
+            mongo_save_data(&coll, &data_arr, Some("id"));
 
             let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
             let filter = convert_to_doc(Some(&filter_value));
