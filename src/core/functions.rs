@@ -25,15 +25,14 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
-        // let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
-        // let filter = convert_to_doc(filter);
-        //
-        // match check_coll_exists(&coll) {
-        //     false => ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key, id_key),
-        //     true => Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
-        // }
-        ResultParse::Ok( vec![ serde_json::Value::String("TEST".to_string()) ] )
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<&serde_json::Value>) -> ResultParse<Vec<serde_json::Value>> {
+        let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
+        let filter = convert_to_doc(filter);
+
+        match check_coll_exists(&coll) {
+            false => ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key),
+            true => Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
+        }
     }
 
 
@@ -49,19 +48,6 @@ struct ComposerBuild {}
 
 impl ComposerBuild {
 
-    /** Convert serde_json Value into vector or values (for later conversion in BSON docs) **/
-    fn prepare_value(v: serde_json::Value, try_convert: bool) -> Vec<serde_json::Value> {
-        let mut res = Vec::new();
-        if try_convert {
-            if v.is_object() { res = v.as_object().unwrap().values().cloned().collect(); }
-            else if v.is_array() { res = v.as_array().unwrap().iter().cloned().collect(); }
-            else { res.push(v); }
-        }
-        else { res.push(v); }
-
-        res
-    }
-
     /// Update brief (if needed)
     ///
     /// # Parameters:
@@ -70,7 +56,7 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<Vec<serde_json::Value>> {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
@@ -79,10 +65,20 @@ impl ComposerBuild {
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        Ok( Self::prepare_value(v, true) )
+                        let mut res: Vec<_>;
+                        if v.is_object() {
+                            res = v.as_object().unwrap().values().cloned().collect::<Vec<serde_json::Value>>();
+                        }
+                        else if v.is_array() {
+                            res = v.as_array().unwrap().iter().cloned().collect::<Vec<serde_json::Value>>();
+                        }
+                        else {
+                            res = vec![v];
+                        };
+                        Ok(res)
                     })
                     .and_then(|v| {
-                        mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
+                        mongo_save_data(coll, &v);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
