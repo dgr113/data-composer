@@ -10,6 +10,7 @@ use crate::mongodb::db::ThreadedDatabase;
 
 
 
+
 pub fn read_json(file_path: &str) -> serde_json::Value {
     fs::read_to_string(file_path).and_then(
         |content| Ok(serde_json::from_str(&content).expect("Error convert JSON string into Value!"))
@@ -59,11 +60,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
 
 /**  Get docs from MongoDB by filter (if needed) **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
-    // match coll.find(Some(filter), None) {
-    //     Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
-    //     Err(_err) => Vec::new()
-    // }
-    match coll.find(None, None) {
+    match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
         Err(_err) => Vec::new()
     }
@@ -90,26 +87,6 @@ pub fn check_coll_exists(coll: &Collection) -> bool {
 
 
 /** ONLY FOR TEST USE **/
-// pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, id_key: Option<&str>) -> Vec<serde_json::Value> {
-//     let coll = mongo_get_coll(db_uri, db_name, db_coll);
-//     let data: Value = serde_json::from_str(data).unwrap();
-//
-//     match data["data"].as_array() {
-//         Some(data_arr) => {
-//             mongo_save_data(&coll, &data_arr, id_key);
-//
-//             let filter_value: serde_json::Value = serde_json::from_str(r#"{"phones": {"$gte": 60}}"#).unwrap();
-//             let filter = convert_to_doc(Some(&filter_value));
-//
-//             let results = mongo_get_data(&coll, filter.clone());
-//             mongo_convert_results(results)
-//         },
-//         None => {
-//             println!("Error convert Jsn data into array!");
-//             vec![serde_json::Value::Null]
-//         }
-//     }
-// }
 pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
     let coll = mongo_get_coll(db_uri, db_name, db_coll);
     let data: Value = serde_json::from_str(data).unwrap();

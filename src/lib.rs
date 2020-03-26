@@ -41,9 +41,6 @@ impl ComposerApi {
 
 
     /// ONLY FOR TEST !
-    // pub fn get_storage_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, id_key: Option<&str>) -> Vec<serde_json::Value> {
-    //     get_mongo_test(db_uri, db_name, db_coll, data, id_key)
-    // }
     pub fn get_storage_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
         get_mongo_test(db_uri, db_name, db_coll, data, filter, id_key)
     }
