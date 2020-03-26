@@ -40,16 +40,16 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
         .map(|d| convert_to_doc(Some(d)))
         // POTENTIALLY WRONG FRAGMENT START
-        // .map(|mut d| {
-        //     //// Maybe need to be optimize ...
-        //     if let Some(id_) = id_field {
-        //         if d.contains_key(id_) {
-        //             d.insert("_id", d.get(id_).unwrap().clone());
-        //         }
-        //     }
-        //     d
-        //     ////
-        // })
+        .map(|mut d| {
+            //// Maybe need to be optimize ...
+            if let Some(id_) = id_field {
+                if d.contains_key(id_) {
+                    d.insert("_id", d.get(id_).unwrap().clone());
+                }
+            }
+            d
+            ////
+        })
         // WRONG FRAGMENT END
         .collect();
 
