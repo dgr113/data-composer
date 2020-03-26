@@ -53,7 +53,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
         // WRONG FRAGMENT END
         .collect();
 
-    coll.insert_many(docs, None).expect("Error write doc into Mongo!");
+    // coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
 
