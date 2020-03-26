@@ -21,6 +21,10 @@ pub struct ComposerApi {}
 
 impl ComposerApi {
     /// Get a brief description of a given content type
+    ///
+    /// # Parameters:
+    /// `id_key`: Field of every document in <arr_data> interpreted as database document ID
+    ///
     pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(&config, app_type);
