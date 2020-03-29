@@ -55,7 +55,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
         .collect();
 
     // coll.insert_many(docs, None).expect("Error write doc into Mongo!");
-    coll.update_many(None,docs, None).expect("Error write doc into Mongo!");
+    coll.update_many(OrderedDocument::new(),docs, None).expect("Error write doc into Mongo!");
 }
 
 
