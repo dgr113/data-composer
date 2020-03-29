@@ -90,8 +90,9 @@ pub fn check_coll_exists(coll: &Collection) -> bool {
 /** ONLY FOR TEST USE **/
 pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
     let coll = mongo_get_coll(db_uri, db_name, db_coll);
-    let data: Value = serde_json::from_str(data).unwrap();
+    coll.drop();
 
+    let data: Value = serde_json::from_str(data).unwrap();
     match data["data"].as_array() {
         Some(data_arr) => {
             mongo_save_data(&coll, &data_arr, id_key);
