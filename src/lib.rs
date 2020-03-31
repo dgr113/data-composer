@@ -25,7 +25,13 @@ impl ComposerApi {
     /// # Parameters:
     /// `id_key`: Field of every document in <arr_data> interpreted as database document ID
     ///
-    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
+    // pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
+    //     let access_key = &[lang, ];
+    //     let tree_params = TreeParams::build_params(&config, app_type);
+    //     let brief_params = BriefParams::build_params(&config, app_type, access_key);
+    //     ComposerIntro::get_full(tree_params, brief_params, "mapping", filter, id_key)
+    // }
+    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type, access_key);
@@ -41,7 +47,10 @@ impl ComposerApi {
 
 
     /// ONLY FOR TEST !
-    pub fn get_storage_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
+    // pub fn get_storage_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
+    //     get_mongo_test(db_uri, db_name, db_coll, data, filter, id_key)
+    // }
+    pub fn get_storage_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
         get_mongo_test(db_uri, db_name, db_coll, data, filter, id_key)
     }
 }

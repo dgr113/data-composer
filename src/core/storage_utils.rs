@@ -18,10 +18,19 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
+// pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
+//     match d {
+//         Some(t) => {
+//             let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
+//             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+//         },
+//         None => OrderedDocument::new()
+//     }
+// }
+pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
     match d {
         Some(t) => {
-            let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
+            let result_: bson::Bson = t.into();  // Maybe need to optimize ...
             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
         },
         None => OrderedDocument::new()
@@ -41,9 +50,24 @@ pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collectio
 /// # Parameters:
 /// `id_field`: Field of every document in <arr_data> interpreted as database document ID
 ///
+// pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
+//     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
+//         .map(|d| convert_to_doc(Some(d)))
+//         .map(|mut d| {
+//             if let Some(id_) = id_field {
+//                 if d.contains_key(id_) {
+//                     d.insert("_id", d.get(id_).unwrap().clone());  // Maybe need to be optimize ...
+//                 }
+//             }
+//             d
+//         })
+//         .collect();
+//     // coll.update_many(OrderedDocument::new(),docs, None).expect("Error write doc into Mongo!");
+//     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
+// }
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-        .map(|d| convert_to_doc(Some(d)))
+        .map(|d| convert_to_doc(Some(d.clone())))
         .map(|mut d| {
             if let Some(id_) = id_field {
                 if d.contains_key(id_) {
@@ -53,8 +77,6 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
             d
         })
         .collect();
-
-    // coll.update_many(OrderedDocument::new(),docs, None).expect("Error write doc into Mongo!");
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
@@ -88,7 +110,25 @@ pub fn check_coll_exists(coll: &Collection) -> bool {
 
 
 /** ONLY FOR TEST USE **/
-pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
+// pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
+//     let coll = mongo_get_coll(db_uri, db_name, db_coll);
+//     coll.drop();
+//
+//     let data: Value = serde_json::from_str(data).unwrap();
+//     match data["data"].as_array() {
+//         Some(data_arr) => {
+//             mongo_save_data(&coll, &data_arr, id_key);
+//             let filter = convert_to_doc(filter);
+//             let results = mongo_get_data(&coll, filter.clone());
+//             mongo_convert_results(results)
+//         },
+//         None => {
+//             println!("Error convert Jsn data into array!");
+//             vec![serde_json::Value::Null]
+//         }
+//     }
+// }
+pub fn get_mongo_test(db_uri: &str, db_name: &str, db_coll: &str, data: &str, filter: Option<serde_json::Value>, id_key: Option<&str>) -> Vec<serde_json::Value> {
     let coll = mongo_get_coll(db_uri, db_name, db_coll);
     coll.drop();
 
