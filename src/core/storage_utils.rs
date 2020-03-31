@@ -86,11 +86,11 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
 
 /**  Get docs from MongoDB by filter (if needed) **/
 pub fn mongo_get_data(coll: &Collection, filter: OrderedDocument) -> Vec<OrderedDocument> {
-    // match coll.find(Some(filter), None) {
+    // match coll.find(None, None) {
     //     Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
     //     Err(_err) => Vec::new()
     // }
-    match coll.find(None, None) {
+    match coll.find(Some(filter), None) {
         Ok(cursor) => cursor.map(|doc| doc.unwrap()).collect::<Vec<_>>(),
         Err(_err) => Vec::new()
     }
