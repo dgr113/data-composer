@@ -33,7 +33,6 @@ impl ComposerApi {
     // }
     pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, filter: Option<serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let access_key = &[lang, ];
-        println!("{:?}", &config);
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type, access_key);
         ComposerIntro::get_full(tree_params, brief_params, "mapping", filter, id_key)
