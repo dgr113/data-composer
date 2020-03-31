@@ -69,7 +69,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
         .map(|d| {
             println!("!!!!!! {:?}", &d);
-            convert_to_doc(Some(d.clone()))
+            convert_to_doc(Some( (d.as_array().unwrap()[0]).clone()) )
         })
         .map(|mut d| {
             if let Some(id_) = id_field {
