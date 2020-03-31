@@ -85,6 +85,7 @@ impl ComposerBuild {
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
+                        println!("!!!!!!!!!!!! {:?}", &v);
                         Ok( Self::prepare_value(v, true) )
                     })
                     .and_then(|v| {
@@ -93,7 +94,6 @@ impl ComposerBuild {
                     })
                     .map_err(|err| err.to_string())
             );
-
         result_
     }
 
