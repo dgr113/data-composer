@@ -36,7 +36,6 @@ impl ComposerApi {
         let tree_params = TreeParams::build_params(&config, app_type);
         let brief_params = BriefParams::build_params(&config, app_type, access_key);
         let results = ComposerIntro::get_full(tree_params, brief_params, "mapping", filter, id_key);
-        // println!("{:?}", results);
         results
     }
 
