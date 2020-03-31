@@ -87,6 +87,7 @@ impl ComposerBuild {
                         Ok( Self::prepare_value(v, true) )
                     })
                     .and_then(|v| {
+                        println!("DATA: {:?}", &v);
                         mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
                         Ok(v)
                     })
