@@ -88,8 +88,8 @@ impl ComposerBuild {
                         Ok( Self::prepare_value(v, true) )
                     })
                     .and_then(|v| {
-                        println!("77777777777777 {:?}", &v);
-                        // mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
+                        // println!("77777777777777 {:?}", &v);
+                        mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
