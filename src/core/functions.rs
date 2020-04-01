@@ -25,10 +25,13 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, filter: Option<serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
+    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, tree_order_key: &str, filter: Option<serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
         let filter = convert_to_doc(filter);
-        if !check_coll_exists(&coll) {
+        if update.unwrap_or(false) {
+            coll.drop();
+        }
+        else if !check_coll_exists(&coll) {
             ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key, id_key);
         }
         Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
