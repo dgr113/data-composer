@@ -11,7 +11,6 @@ use std::collections::HashMap;
 pub mod core;
 pub use crate::core::functions::{ComposerIntro};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
-pub use crate::core::storage_utils::get_mongo_test;
 use data_getter::ResultParse;
 use bson::ordered::OrderedDocument;
 
