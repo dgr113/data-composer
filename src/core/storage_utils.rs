@@ -24,9 +24,11 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 // }
 pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
     match d {
-        Some(t) => {
-            println!("{:?}", t);
-            let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
+        Some(mut t) => {
+            if t.is_array() {
+                t = t.as_array().unwrap()[0].clone();
+            }
+            let result_: bson::Bson = t.into();  // Maybe need to optimize ...
             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
         },
         None => OrderedDocument::new()
