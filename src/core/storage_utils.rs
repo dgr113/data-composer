@@ -34,9 +34,7 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
 ///
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-        .map(|d| {
-            convert_to_doc(Some(d))
-        })
+        .map(|d| convert_to_doc(Some(d)))
         .map(|mut d| {
             if let Some(id_) = id_field {
                 if d.contains_key(id_) {
@@ -46,6 +44,7 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
             d
         })
         .collect();
+
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 

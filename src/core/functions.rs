@@ -9,7 +9,6 @@ use crate::core::common_utils::{get_dummy_error};
 use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
 use crate::core::storage_utils::{check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results, mongo_save_data};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
-use bson::ordered::OrderedDocument;
 
 
 
@@ -76,22 +75,21 @@ impl ComposerBuild {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
-        let result_ = data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
-            .and_then(|result| {
-                println!("INPUT DATA: {:?}", &result);
-                serde_json::to_value(&result)
+        let result = data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
+            .and_then(|result_| {
+                serde_json::to_value(&result_)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
                         Ok(Self::prepare_value(v, true))
                     })
                     .and_then(|v| {
-                        println!("WRITE DATA: {:?}", &v);
                         mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
             });
-        result_
+
+        result
     }
 
 
