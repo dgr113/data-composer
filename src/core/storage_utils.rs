@@ -13,20 +13,11 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-// pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
-//     match d {
-//         Some(t) => {
-//             let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
-//             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
-//         },
-//         None => OrderedDocument::new()
-//     }
-// }
-pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
+pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
     match d {
         Some(mut t) => {
             if t.is_array() {
-                t = t.as_array().unwrap()[0].clone();
+                t = &t.as_array().unwrap()[0];
             }
             let result_: bson::Bson = t.into();  // Maybe need to optimize ...
             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
@@ -34,7 +25,6 @@ pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
         None => OrderedDocument::new()
     }
 }
-
 
 
 /**  Save docs into MongoDB and optional set ID (id needed and exists) **/
@@ -45,20 +35,7 @@ pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
         .map(|d| {
-            // let data = r#"
-            //     {
-            //         "name": "John Doe",
-            //         "age": 43,
-            //         "phones": [
-            //             "+44 1234567",
-            //             "+44 2345678"
-            //         ]
-            //     }"#;
-            //
-            // let v: serde_json::Value = serde_json::from_str(data).unwrap();
-            // let r: bson::Bson = v.clone().into();
-            // r.as_document().expect("Error converting JSON Value into Bson filter!").clone()
-            convert_to_doc(Some(d.clone()))
+            convert_to_doc(Some(d))
         })
         .map(|mut d| {
             if let Some(id_) = id_field {
@@ -69,7 +46,6 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
             d
         })
         .collect();
-    // coll.update_many(OrderedDocument::new(),docs, None).expect("Error write doc into Mongo!");
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
 
