@@ -10,7 +10,6 @@ use crate::mongodb::db::ThreadedDatabase;
 
 
 
-
 pub fn read_json(file_path: &str) -> serde_json::Value {
     fs::read_to_string(file_path).and_then(
         |content| Ok(serde_json::from_str(&content).expect("Error convert JSON string into Value!"))
@@ -27,15 +26,6 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
         None => OrderedDocument::new()
     }
 }
-// pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
-//     match d {
-//         Some(t) => {
-//             let result_: bson::Bson = t.into();  // Maybe need to optimize ...
-//             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
-//         },
-//         None => OrderedDocument::new()
-//     }
-// }
 
 
 pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collection {
@@ -65,23 +55,6 @@ pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_fie
     // coll.update_many(OrderedDocument::new(),docs, None).expect("Error write doc into Mongo!");
     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
 }
-// pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
-//     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-//         .map(|d| {
-//             println!("!!!!!! {:?}", &d);
-//             convert_to_doc(Some( (d.as_array().unwrap()[0]).clone()) )
-//         })
-//         .map(|mut d| {
-//             if let Some(id_) = id_field {
-//                 if d.contains_key(id_) {
-//                     d.insert("_id", d.get(id_).unwrap().clone());  // Maybe need to be optimize ...
-//                 }
-//             }
-//             d
-//         })
-//         .collect();
-//     coll.insert_many(docs, None).expect("Error write doc into Mongo!");
-// }
 
 
 /**  Get docs from MongoDB by filter (if needed) **/
