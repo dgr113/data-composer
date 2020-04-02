@@ -19,7 +19,7 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
             if t.is_array() {
                 t = &t.as_array().unwrap()[0];
             }
-            let result_: bson::Bson = t.into();  // Maybe need to optimize ...
+            let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
         },
         None => OrderedDocument::new()
