@@ -15,7 +15,6 @@ use data_getter::ResultParse;
 use bson::ordered::OrderedDocument;
 
 
-
 pub struct ComposerApi {}
 
 impl ComposerApi {
