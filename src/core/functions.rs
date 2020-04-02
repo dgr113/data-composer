@@ -7,7 +7,7 @@ use data_getter::ResultParse;
 
 use crate::core::common_utils::{get_dummy_error};
 use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
-use crate::core::storage_utils::{mongo_get_coll, check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results, mongo_save_data};
+use crate::core::storage_utils::{check_coll_exists, mongo_get_data, convert_to_doc, mongo_convert_results, mongo_save_data};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
 use bson::ordered::OrderedDocument;
 
