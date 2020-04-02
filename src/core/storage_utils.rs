@@ -17,7 +17,16 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
+// pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
+//     match d {
+//         Some(t) => {
+//             let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
+//             result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+//         },
+//         None => OrderedDocument::new()
+//     }
+// }
+pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
     match d {
         Some(t) => {
             let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
@@ -28,12 +37,6 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
 }
 
 
-// pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collection {
-//     let client = Client::with_uri(db_uri).expect("Error: Failed to initialize MongoDb client!");
-//     let db = client.db(db_name);
-//     db.collection(coll_name)
-// }
-
 
 /**  Save docs into MongoDB and optional set ID (id needed and exists) **/
 ///
@@ -42,7 +45,7 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
 ///
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-        .map(|d| convert_to_doc(Some(d)))
+        .map(|d| convert_to_doc(Some(d.clone())))
         .map(|mut d| {
             if let Some(id_) = id_field {
                 if d.contains_key(id_) {
