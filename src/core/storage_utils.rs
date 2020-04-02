@@ -28,11 +28,11 @@ pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
 }
 
 
-pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collection {
-    let client = Client::with_uri(db_uri).expect("Error: Failed to initialize MongoDb client!");
-    let db = client.db(db_name);
-    db.collection(coll_name)
-}
+// pub fn mongo_get_coll(db_uri: &str, db_name: &str, coll_name: &str) -> Collection {
+//     let client = Client::with_uri(db_uri).expect("Error: Failed to initialize MongoDb client!");
+//     let db = client.db(db_name);
+//     db.collection(coll_name)
+// }
 
 
 /**  Save docs into MongoDB and optional set ID (id needed and exists) **/

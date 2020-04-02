@@ -13,6 +13,8 @@ pub use crate::core::functions::{ComposerIntro};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
 use data_getter::ResultParse;
 use bson::ordered::OrderedDocument;
+use mongodb::coll::Collection;
+
 
 
 pub struct ComposerApi {}
@@ -23,11 +25,11 @@ impl ComposerApi {
     /// # Parameters:
     /// `id_key`: Field of every document in <arr_data> interpreted as database document ID
     ///
-    pub fn get_full(app_type: &str, lang: &str, update: Option<bool>, config: &HashMap<String, String>, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
+    pub fn get_full(coll: &Collection, app_type: &str, lang: &str, update: Option<bool>, config: &HashMap<String, String>, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let access_key = &[lang, ];
         let tree_params = TreeParams::build_params(config, app_type);
         let brief_params = BriefParams::build_params(config, app_type, access_key);
-        ComposerIntro::get_full(tree_params, brief_params, update, "mapping", filter, id_key)
+        ComposerIntro::get_full(coll, tree_params, brief_params, update, "mapping", filter, id_key)
     }
 
 

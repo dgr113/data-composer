@@ -12,6 +12,7 @@ pub use crate::core::config_utils::{TreeParams, BriefParams};
 use bson::ordered::OrderedDocument;
 
 
+
 pub struct ComposerIntro {}
 
 impl ComposerIntro {
@@ -25,18 +26,17 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, tree_order_key: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
-        let coll = mongo_get_coll(&brief_params.tmp_db_uri, &brief_params.tmp_db_name, &brief_params.app_type);
+    pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, tree_order_key: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
         let filter = convert_to_doc(filter);
         let is_force_update = update.unwrap_or(false);
         if is_force_update {
             coll.drop();
         }
-        if is_force_update || !check_coll_exists(&coll) {
-            ComposerBuild::get_updated_full(&coll, &tree_params, &brief_params, tree_order_key, id_key);
+        if is_force_update || !check_coll_exists(coll) {
+            ComposerBuild::get_updated_full(coll, &tree_params, &brief_params, tree_order_key, id_key);
         }
 
-        Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
+        Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
     }
 
 
