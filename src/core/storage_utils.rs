@@ -5,9 +5,6 @@ use bson::ordered::OrderedDocument;
 use mongodb::coll::Collection;
 use mongodb::Client;
 
-use crate::mongodb::ThreadedClient;
-use crate::mongodb::db::ThreadedDatabase;
-
 
 
 pub fn read_json(file_path: &str) -> serde_json::Value {
@@ -45,7 +42,22 @@ pub fn convert_to_doc(d: Option<serde_json::Value>) -> OrderedDocument {
 ///
 pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
     let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-        .map(|d| convert_to_doc(Some(d.clone())))
+        .map(|d| {
+            let data = r#"
+                {
+                    "name": "John Doe",
+                    "age": 43,
+                    "phones": [
+                        "+44 1234567",
+                        "+44 2345678"
+                    ]
+                }"#;
+
+            let v: serde_json::Value = serde_json::from_str(data).unwrap();
+            let r: bson::Bson = v.clone().into();
+            r.as_document().expect("Error converting JSON Value into Bson filter!").clone()
+            // convert_to_doc(Some(d.clone()))
+        })
         .map(|mut d| {
             if let Some(id_) = id_field {
                 if d.contains_key(id_) {
