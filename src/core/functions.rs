@@ -40,9 +40,7 @@ impl ComposerIntro {
     //     Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
     // }
     pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, tree_order_key: &str, filter: Option<serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
-        println!("FILTER: {:?}", &filter);
-        // let filter = convert_to_doc(filter);
-        let filter = OrderedDocument::new();
+        let filter = convert_to_doc(filter);
         let is_force_update = update.unwrap_or(false);
         if is_force_update {
             coll.drop();
@@ -92,18 +90,20 @@ impl ComposerBuild {
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
         let result_ = data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
-            .and_then(|result|
+            .and_then(|result| {
+                println!("INPUT DATA: {:?}", &result);
                 serde_json::to_value(&result)
                     .or_else(get_dummy_error)
                     .and_then(|v| {
-                        Ok( Self::prepare_value(v, true) )
+                        Ok(Self::prepare_value(v, true))
                     })
                     .and_then(|v| {
+                        println!("WRITE DATA: {:?}", &v);
                         mongo_save_data(coll, &v, id_key);  // Maybe need to optimize !
                         Ok(v)
                     })
                     .map_err(|err| err.to_string())
-            );
+            });
         result_
     }
 
