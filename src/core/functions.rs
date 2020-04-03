@@ -25,7 +25,7 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, filter: Option<&serde_json::Value>)
+    pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, filter: Option<&serde_json::Value>, id_key: Option<&str>)
         -> ResultParse<Vec<serde_json::Value>>
         {
             let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
@@ -33,7 +33,7 @@ impl ComposerIntro {
 
             if is_force_update { coll.drop().unwrap(); }
             if is_force_update || !check_coll_exists(coll) {
-                if ComposerBuild::get_updated_full(coll, &tree_params, &brief_params).is_err() {
+                if ComposerBuild::get_updated_full(coll, &tree_params, &brief_params, id_key).is_err() {
                     println!("Error with update assets data!")
                 };
             }
@@ -61,7 +61,7 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams) -> ResultParse<serde_json::Value> {
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
@@ -70,7 +70,7 @@ impl ComposerBuild {
                 &results.as_array().ok_or("Error data getter!")
                     .and_then(|arr| {
                         let docs = arr.iter()
-                            .map(|v| prepare_to_doc(Some(v), Some("id")))
+                            .map(|v| prepare_to_doc(Some(v), id_key))
                             .filter(|d| d.is_some())
                             .map(|d| d.unwrap().clone())
                             .collect::<Vec<OrderedDocument>>();
