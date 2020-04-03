@@ -34,6 +34,7 @@ pub fn dump_json(content: serde_json::Value) -> Result<String, io::Error> {
 /// # Examples
 /// ```
 /// use content_machiner::core::io_utils::build_filename;
+/// use data_composer::core::io_utils::build_filename;
 /// let main_component = "movies";
 /// let add_components = &["test", "ru-RU"];
 /// let result = build_filename(main_component, Some(add_components), "yml", ".");

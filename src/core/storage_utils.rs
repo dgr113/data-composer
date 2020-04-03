@@ -13,39 +13,29 @@ pub fn read_json(file_path: &str) -> serde_json::Value {
 }
 
 
-pub fn convert_to_doc(d: Option<&serde_json::Value>) -> OrderedDocument {
-    match d {
-        Some(mut t) => {
-            if t.is_array() {
-                t = &t.as_array().unwrap()[0];
-            }
-            let result_: bson::Bson = t.clone().into();  // Maybe need to optimize ...
-            result_.as_document().expect("Error converting JSON Value into Bson filter!").clone()
-        },
-        None => OrderedDocument::new()
-    }
-}
-
-
-/**  Save docs into MongoDB and optional set ID (id needed and exists) **/
-///
-/// # Parameters:
-/// `id_field`: Field of every document in <arr_data> interpreted as database document ID
-///
-pub fn mongo_save_data(coll: &Collection, arr_data: &[serde_json::Value], id_field: Option<&str>) {
-    let docs: Vec<OrderedDocument> = arr_data.clone().iter()
-        .map(|d| convert_to_doc(Some(d)))
-        .map(|mut d| {
-            if let Some(id_) = id_field {
-                if d.contains_key(id_) {
-                    d.insert("_id", d.get(id_).unwrap().clone());  // Maybe need to be optimize ...
+/** Prepare one element to doc **/
+pub fn prepare_to_doc(d: Option<&serde_json::Value>, id_field: Option<&str>) -> Option<OrderedDocument> {
+    d.and_then(|t| {
+        if t.is_object() {
+            Some( t.to_owned().into() )
+        }
+        else if t.is_array() {
+            Some( t[0].to_owned().into() )
+        }
+        else {
+            None
+        }
+    }).and_then(|t: bson::Bson| {
+        t.as_document().and_then(|d| {
+            let mut d = d.clone();
+            if let Some(id) = id_field {
+                if d.contains_key(id) {
+                    d.insert("_id", d.get(id).unwrap().clone());  // Maybe need to be optimize ...
                 }
             }
-            d
+            Some( d )
         })
-        .collect();
-
-    coll.insert_many(docs, None).expect("Error write doc into Mongo!");
+    })
 }
 
 
