@@ -33,7 +33,9 @@ impl ComposerIntro {
 
             if is_force_update { coll.drop().unwrap(); }
             if is_force_update || !check_coll_exists(coll) {
-                ComposerBuild::get_updated_full(coll, &tree_params, &brief_params);
+                if ComposerBuild::get_updated_full(coll, &tree_params, &brief_params).is_err() {
+                    println!("Error with update assets data!")
+                };
             }
 
             Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
@@ -65,7 +67,7 @@ impl ComposerBuild {
 
         data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
-                &results.as_array().ok_or("Error data getter")
+                &results.as_array().ok_or("Error data getter!")
                     .and_then(|arr| {
                         let docs = arr.iter()
                             .map(|v| prepare_to_doc(Some(v), Some("id")))
@@ -80,7 +82,7 @@ impl ComposerBuild {
     }
 
 
-    /// Update tree (if needed)
+    /// Update tree and return it
     ///
     /// # Parameters:
     /// `update_mark_path`: Path to identifity update process mark
@@ -96,9 +98,9 @@ impl ComposerBuild {
             .and_then(dump_yaml)
             .and_then(|content| {
                 Path::new(&params.save_path).parent()
-                    .ok_or("Error with create <tree> directory")
+                    .ok_or("Error with create <tree> directory!")
                     .and_then(|t| Ok(fs::create_dir_all(t)))
-                    .and_then(|_| fs::write( &params.save_path, content ).map_err(|_| "Error with write <tree> file"))
+                    .and_then(|_| fs::write( &params.save_path, content ).map_err(|_| "Error with write <tree> file!"))
                     .unwrap();
 
                 Ok(result)
