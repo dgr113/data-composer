@@ -98,12 +98,7 @@ impl ComposerBuild {
                 Path::new(&params.save_path).parent()
                     .ok_or("Error with create parent directory")
                     .and_then(|t| Ok(fs::create_dir_all(t)))
-                    .and_then(|_| {
-                        match fs::write( &params.save_path, content ) {
-                            Ok(_) => Ok(()),
-                            Err(_) => Ok(())
-                        }
-                    })
+                    .and_then(|_| fs::write( &params.save_path, content ).map_err(|_| "Error with write file"))
                     .unwrap();
 
                 Ok(result)
