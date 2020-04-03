@@ -1,12 +1,11 @@
 use std::path::Path;
 use std::{fs, io};
-use std::collections::HashMap;
 
 use mongodb::coll::Collection;
 use data_getter::ResultParse;
 
 use crate::core::common_utils::{get_dummy_error};
-use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
+use crate::core::io_utils::{dump_yaml, parse_yaml};
 use crate::core::storage_utils::{check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc};
 pub use crate::core::config_utils::{TreeParams, BriefParams};
 use bson::ordered::OrderedDocument;
@@ -26,18 +25,19 @@ impl ComposerIntro {
     }
 
 
-    pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, tree_order_key: &str, filter: Option<&serde_json::Value>, id_key: Option<&str>) -> ResultParse<Vec<serde_json::Value>> {
-        let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
-        let is_force_update = update.unwrap_or(false);
-        if is_force_update {
-            coll.drop();
-        }
-        if is_force_update || !check_coll_exists(coll) {
-            ComposerBuild::get_updated_full(coll, &tree_params, &brief_params, tree_order_key, id_key);
-        }
+    pub fn get_full(coll: &Collection, tree_params: TreeParams, brief_params: BriefParams, update: Option<bool>, filter: Option<&serde_json::Value>)
+        -> ResultParse<Vec<serde_json::Value>>
+        {
+            let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
+            let is_force_update = update.unwrap_or(false);
 
-        Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
-    }
+            if is_force_update { coll.drop().unwrap(); }
+            if is_force_update || !check_coll_exists(coll) {
+                ComposerBuild::get_updated_full(coll, &tree_params, &brief_params);
+            }
+
+            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+        }
 
 
     /// Get compose (natural key for access YAML field)
@@ -59,7 +59,7 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
+    fn get_updated_full(coll: &Collection, tree_params: &TreeParams, brief_params: &BriefParams) -> ResultParse<serde_json::Value> {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
