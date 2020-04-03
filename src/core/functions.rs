@@ -75,6 +75,8 @@ impl ComposerBuild {
                             .map(|d| d.unwrap().clone())
                             .collect::<Vec<OrderedDocument>>();
 
+                        println!("!!!!!!!!!!!!!! {:?}", &docs);
+
                         Ok( coll.insert_many(docs, None).expect("Error write doc into Mongo!") )
                     });
                 Ok( results )
