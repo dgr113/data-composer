@@ -96,9 +96,9 @@ impl ComposerBuild {
             .and_then(dump_yaml)
             .and_then(|content| {
                 Path::new(&params.save_path).parent()
-                    .ok_or("Error with create parent directory")
+                    .ok_or("Error with create <tree> directory")
                     .and_then(|t| Ok(fs::create_dir_all(t)))
-                    .and_then(|_| fs::write( &params.save_path, content ).map_err(|_| "Error with write file"))
+                    .and_then(|_| fs::write( &params.save_path, content ).map_err(|_| "Error with write <tree> file"))
                     .unwrap();
 
                 Ok(result)
