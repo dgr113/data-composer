@@ -95,12 +95,18 @@ impl ComposerBuild {
             .or_else(get_dummy_error)
             .and_then(dump_yaml)
             .and_then(|content| {
-                fs::create_dir_all(Path::new(&params.save_path).parent().unwrap());  // Try to create parent directories
-                fs::write(&params.save_path, content).or_else(|err|{
-                    println!("Error write trees into file: {}", &err.to_string());
-                    get_dummy_error(err)
-                });
+                Path::new(&params.save_path).parent()
+                    .ok_or("Error with create parent directory")
+                    .and_then(|t| Ok(fs::create_dir_all(t)))
+                    .and_then(|_| {
+                        match fs::write( &params.save_path, content ) {
+                            Ok(_) => Ok(()),
+                            Err(_) => Ok(())
+                        }
+                    })
+                    .unwrap();
+
                 Ok(result)
-        })
+            })
     }
 }
