@@ -65,19 +65,20 @@ impl ComposerBuild {
         let tree = Self::get_updated_tree(tree_params).expect("Error with create tree on full-update stage!");
         let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
-        println!("!!!!!!!!!!!");
-
         data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
+                println!("DATA GETTER: {:?}", &results);
+
                 &results.as_array().ok_or("Error data getter!")
                     .and_then(|arr| {
+
+                        println!("NEXT DATA: {:?}", &arr);
+
                         let docs = arr.iter()
                             .map(|v| prepare_to_doc(Some(v), id_key))
                             .filter(|d| d.is_some())
                             .map(|d| d.unwrap().clone())
                             .collect::<Vec<OrderedDocument>>();
-
-                        // println!("!!!!!!!!!!!!!! {:?}", &docs);
 
                         Ok( coll.insert_many(docs, None).expect("Error write doc into Mongo!") )
                     });
