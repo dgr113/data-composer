@@ -16,6 +16,16 @@ pub struct ComposerIntro {}
 
 impl ComposerIntro {
 
+    /** Convert serde_json Value into vector or values (for later conversion in BSON docs) **/
+    fn prepare_external_data(v: &serde_json::Value) -> Option<Vec<&serde_json::Value>> {
+        let mut res = Vec::new();
+        if v.is_object() { res = v.as_object().unwrap().values().collect(); }
+        else if v.is_array() { res = v.as_array().unwrap().iter().collect(); }
+        else { res.push(v); }
+        Some(res)
+    }
+
+
     /// Check state for update tree
     pub fn get_tree(tree_params: TreeParams) -> Result<serde_yaml::Value, io::Error> {
         match !Path::new(&tree_params.save_path).exists() {
@@ -67,22 +77,20 @@ impl ComposerBuild {
 
         data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
-                println!("DATA GETTER: {:?}", &results);
 
-                &results.as_array().ok_or("Error data getter!")
+                ComposerIntro::prepare_external_data(&results)
+                    .ok_or("Error external data convert!".to_string())
                     .and_then(|arr| {
-
-                        println!("NEXT DATA: {:?}", &arr);
-
                         let docs = arr.iter()
                             .map(|v| prepare_to_doc(Some(v), id_key))
                             .filter(|d| d.is_some())
                             .map(|d| d.unwrap().clone())
                             .collect::<Vec<OrderedDocument>>();
-
-                        Ok( coll.insert_many(docs, None).expect("Error write doc into Mongo!") )
-                    });
-                Ok( results )
+                        coll.insert_many(docs, None)
+                            .map_err(|_| "Error write doc into Mongo!".to_string())
+                            .and_then(|_| Ok("Success write data"))
+                    })
+                    .and_then(|_| Ok(results))
             })
     }
 
