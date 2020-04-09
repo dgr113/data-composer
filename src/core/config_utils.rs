@@ -14,10 +14,20 @@ pub struct Params<'a> {
 
 impl<'a> Params<'a> {
     pub fn build_params(config: &'a serde_json::Value, app_type: &'a str, access_key: &'a [&'a str]) -> Params<'a> {
-        let tree_path = build_path(&config["TREES_BASEDIR"].as_str().unwrap(), &build_filename(&app_type,None, "yml", "."));
-        let order_path = build_path(&config["ORDERS_BASEDIR"].as_str().unwrap(), &build_filename(&app_type, None, "order", "."));
+        let tree_path = build_path(
+            &config["data-getter"]["TREES_BASEDIR"].as_str().unwrap(),
+            &build_filename(&app_type,None, "yml", ".")
+        );
+        let order_path = build_path(
+            &config["data-getter"]["ORDERS_BASEDIR"].as_str().unwrap(),
+            &build_filename(&app_type, None, "order", ".")
+        );
 
-        let brief_fields = &config["BRIEFLY_FIELDS"].as_str().unwrap().split(",").map(|s| s.trim().to_string()).collect::<Vec<String>>();
+        let brief_fields = &config["data-getter"]["BRIEFLY_FIELDS"].as_str().unwrap()
+            .split(",")
+            .map(|s| s.trim().to_string())
+            .collect::<Vec<String>>();
+
         let data_finder_config = &config["data-finder"];
         Params {
             data_finder_config,
