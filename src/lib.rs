@@ -6,7 +6,6 @@ extern crate data_finder;
 extern crate data_getter;
 
 use std::io;
-use std::collections::HashMap;
 
 pub mod core;
 pub use crate::core::functions::{ComposerIntro};
