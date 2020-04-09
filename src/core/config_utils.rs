@@ -14,6 +14,7 @@ pub struct Params<'a> {
 
 impl<'a> Params<'a> {
     pub fn build_params(config: &'a serde_json::Value, app_type: &'a str, access_key: &'a [&'a str]) -> Params<'a> {
+        println!("COMPOSER CONFIG: {:?}", &config);
         let tree_path = build_path(
             &config["data-getter"]["TREES_BASEDIR"].as_str().unwrap(),
             &build_filename(&app_type,None, "yml", ".")
