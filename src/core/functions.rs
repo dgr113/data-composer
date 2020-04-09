@@ -104,7 +104,7 @@ impl ComposerBuild {
     /// `app_type`: App type for access sniffer settings in config
     ///
     fn get_updated_tree(params: &Params) -> Result<serde_yaml::Value, io::Error> {
-        let result = data_finder::run(params.data_finder_config.clone(), &params.app_type);  // Run ext sniffer
+        let result = data_finder::run(params.data_finder_config.clone(), &params.app_type);  // Run ext data-finder
 
         serde_yaml::to_value(&result)
             .or_else(get_dummy_error)
