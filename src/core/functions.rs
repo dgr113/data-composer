@@ -73,7 +73,7 @@ impl ComposerBuild {
     ///
     fn get_updated_full(coll: &Collection, params: &Params, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
         let tree = Self::get_updated_tree(&params).expect("Error with create tree on full-update stage!");
-        let brief_fields = &params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
+        let brief_fields = &params.brief_fields.iter().map(|s| s.as_ref()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
         data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {

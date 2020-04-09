@@ -33,8 +33,11 @@ impl ComposerApi {
 
 
     /// Get a brief description of a given content type
-    pub fn get_tree(app_type: &str, config: &serde_json::Value) -> Result<serde_yaml::Value, io::Error> {
-        let params = Params::build_params(config, app_type, &["", ]);
-        ComposerIntro::get_tree(params)
-    }
+    pub fn get_tree(app_type: &str, config: &serde_json::Value)
+        -> Result<serde_yaml::Value, io::Error>
+        {
+            let access_key = &["", ];
+            let params = Params::build_params(config, app_type, access_key);
+            ComposerIntro::get_tree(params)
+        }
 }
