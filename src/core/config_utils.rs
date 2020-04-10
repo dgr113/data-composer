@@ -16,8 +16,6 @@ impl<'a> Params<'a> {
     pub fn build_params(config: &'a serde_json::Value, app_type: &'a str, access_key: &'a [&'a str]) -> Params<'a> {
         let data_finder_config = &config["data-finder"];
 
-        println!("COMPOSER CONFIG: {:?}", &config);
-
         let tree_path = build_path(
             config["data-getter"]["TREES_BASEDIR"].as_str().expect("Error get <TREES_BASEDIR>"),
             &build_filename(&app_type,None, "yml", ".")
