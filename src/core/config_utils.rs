@@ -17,12 +17,12 @@ impl<'a> Params<'a> {
         let data_finder_config = &config["data-finder"];
 
         let tree_path = build_path(
-            config["data-getter"]["TREES_BASEDIR"].as_str().unwrap(),
+            config["data-getter"]["TREES_BASEDIR"].as_str().expect("Error get <TREES_BASEDIR>"),
             &build_filename(&app_type,None, "yml", ".")
         ).expect( "Error build <tree> file path");
 
         let order_path = build_path(
-            config["data-getter"]["ORDERS_BASEDIR"].as_str().unwrap(),
+            config["data-getter"]["ORDERS_BASEDIR"].as_str().expect("Error get <ORDERS_BASEDIR>"),
             &build_filename(&app_type, None, "order", ".")
         ).expect( "Error build <orders> file path");
 
