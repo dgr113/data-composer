@@ -14,19 +14,19 @@ pub struct Params<'a> {
 
 impl<'a> Params<'a> {
     pub fn build_params(config: &'a serde_json::Value, app_type: &'a str, access_key: &'a [&'a str]) -> Params<'a> {
-        let data_finder_config = &config["data-finder"];
+        let data_finder_config = &config["data_finder"];
 
         let tree_path = build_path(
-            config["data-getter"]["TREES_BASEDIR"].as_str().expect("Error get <TREES_BASEDIR>"),
+            config["data_getter"]["TREES_BASEDIR"].as_str().expect("Error get <TREES_BASEDIR>"),
             &build_filename(&app_type,None, "yml", ".")
         ).expect( "Error build <tree> file path");
 
         let order_path = build_path(
-            config["data-getter"]["ORDERS_BASEDIR"].as_str().expect("Error get <ORDERS_BASEDIR>"),
+            config["data_getter"]["ORDERS_BASEDIR"].as_str().expect("Error get <ORDERS_BASEDIR>"),
             &build_filename(&app_type, None, "order", ".")
         ).expect( "Error build <orders> file path");
 
-        let brief_fields = config["data-getter"]["BRIEFLY_FIELDS"].as_str().unwrap()
+        let brief_fields = config["data_getter"]["BRIEFLY_FIELDS"].as_str().unwrap()
             .split(",")
             .map(|s| s.trim())
             .collect();
