@@ -9,7 +9,7 @@ use crate::core::io_utils::{dump_yaml, parse_yaml};
 use crate::core::storage_utils::{check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc};
 pub use crate::core::config_utils::Params;
 use bson::ordered::OrderedDocument;
-
+use serde_json::Value;
 
 
 pub struct ComposerIntro {}
@@ -27,15 +27,15 @@ impl ComposerIntro {
 
 
     /// Check state for update tree
-    pub fn get_tree(params: Params) -> Result<serde_yaml::Value, io::Error> {
+    pub fn get_tree(params: Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
         match !Path::new(&params.tree_path).exists() {
-            true => ComposerBuild::get_updated_tree(&params),
+            true => ComposerBuild::get_updated_tree(&params, finder_config),
             false => fs::read_to_string(params.tree_path).and_then(parse_yaml)
         }
     }
 
 
-    pub fn get_full(coll: &Collection, params: Params, update: Option<bool>, filter: Option<&serde_json::Value>, id_key: Option<&str>)
+    pub fn get_full(params: Params, finder_config: &serde_json::Value, coll: &Collection, update: Option<bool>, filter: Option<&serde_json::Value>, id_key: Option<&str>)
         -> ResultParse<Vec<serde_json::Value>>
         {
             let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
@@ -43,7 +43,7 @@ impl ComposerIntro {
 
             if is_force_update { coll.drop().unwrap(); }
             if is_force_update || !check_coll_exists(coll) {
-                if ComposerBuild::get_updated_full(coll, &params, id_key).is_err() {
+                if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
                     println!("Error with update assets data!")
                 };
             }
@@ -71,8 +71,8 @@ impl ComposerBuild {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn get_updated_full(coll: &Collection, params: &Params, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
-        let tree = Self::get_updated_tree(&params).expect("Error with create tree on full-update stage!");
+    fn get_updated_full(params: &Params, finder_config: &Value, coll: &Collection, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
+        let tree = Self::get_updated_tree(params, finder_config).expect("Error with create tree on full-update stage!");
         let brief_fields = &params.brief_fields.iter().map(|s| s.as_ref()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
         data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
@@ -103,8 +103,8 @@ impl ComposerBuild {
     /// `sniffer_config_path`: Path to sniffer for build tree
     /// `app_type`: App type for access sniffer settings in config
     ///
-    fn get_updated_tree(params: &Params) -> Result<serde_yaml::Value, io::Error> {
-        let result = data_finder::run(params.data_finder_config.clone(), &params.app_type);  // Run ext data-finder
+    fn get_updated_tree(params: &Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
+        let result = data_finder::run(finder_config.clone(), &params.app_type);  // Run ext data-finder
 
         serde_yaml::to_value(&result)
             .or_else(get_dummy_error)

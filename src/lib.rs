@@ -12,6 +12,7 @@ pub use crate::core::functions::{ComposerIntro};
 pub use crate::core::config_utils::{Params};
 use data_getter::ResultParse;
 use mongodb::coll::Collection;
+use serde_json::{Value as SerdeJsonValue};
 
 
 
@@ -23,21 +24,30 @@ impl ComposerApi {
     /// # Parameters:
     /// `id_key`: Field of every document in <arr_data> interpreted as database document ID
     ///
-    pub fn get_full(coll: &Collection, app_type: &str, lang: &str, update: Option<bool>, config: &serde_json::Value, filter: Option<&serde_json::Value>, id_key: Option<&str>)
-        -> ResultParse<Vec<serde_json::Value>>
+    pub fn get_full(
+        finder_config: &SerdeJsonValue,
+        getter_config: &SerdeJsonValue,
+        coll: &Collection,
+        app_type: &str,
+        lang: &str,
+        update: Option<bool>,
+        filter: Option<&SerdeJsonValue>,
+        id_key: Option<&str>
+
+    )  -> ResultParse<Vec<SerdeJsonValue>>
         {
             let access_key = &[lang, ];
-            let params = Params::build_params(config, app_type, access_key);
-            ComposerIntro::get_full(coll, params, update, filter, id_key)
+            let params = Params::build_params(getter_config, app_type, access_key);
+            ComposerIntro::get_full(params, finder_config, coll, update, filter, id_key)
         }
 
 
     /// Get a brief description of a given content type
-    pub fn get_tree(app_type: &str, config: &serde_json::Value)
+    pub fn get_tree(app_type: &str, finder_config: &SerdeJsonValue, getter_config: &SerdeJsonValue)
         -> Result<serde_yaml::Value, io::Error>
         {
             let access_key = &["", ];
-            let params = Params::build_params(config, app_type, access_key);
-            ComposerIntro::get_tree(params)
+            let params = Params::build_params(getter_config, app_type, access_key);
+            ComposerIntro::get_tree(params, finder_config)
         }
 }
