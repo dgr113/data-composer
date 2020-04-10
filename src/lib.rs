@@ -27,8 +27,8 @@ impl ComposerApi {
     pub fn get_full(
         finder_config: &SerdeJsonValue,
         getter_config: &SerdeJsonValue,
-        coll: &Collection,
         app_type: &str,
+        coll: &Collection,
         lang: &str,
         update: Option<bool>,
         filter: Option<&SerdeJsonValue>,
@@ -43,7 +43,7 @@ impl ComposerApi {
 
 
     /// Get a brief description of a given content type
-    pub fn get_tree(app_type: &str, finder_config: &SerdeJsonValue, getter_config: &SerdeJsonValue)
+    pub fn get_tree(finder_config: &SerdeJsonValue, getter_config: &SerdeJsonValue, app_type: &str)
         -> Result<serde_yaml::Value, io::Error>
         {
             let access_key = &["", ];
