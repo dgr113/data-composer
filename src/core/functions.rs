@@ -41,13 +41,13 @@ impl ComposerIntro {
             let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
             let is_force_update = update.unwrap_or(false);
 
-            if is_force_update { coll.drop().unwrap(); }
-            if is_force_update || !check_coll_exists(coll) {
-                if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
-                    println!("Error with update assets data!")
-                };
-            }
-
+            // if is_force_update { coll.drop().unwrap(); }
+            // if is_force_update || !check_coll_exists(coll) {
+            //     if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
+            //         println!("Error with update assets data!")
+            //     };
+            // }
+            ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
             Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
 
