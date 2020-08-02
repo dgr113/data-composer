@@ -48,6 +48,7 @@ impl ComposerIntro {
             //     };
             // }
 
+            coll.drop().unwrap();
             ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
 
             Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
