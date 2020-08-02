@@ -91,7 +91,7 @@ impl ComposerBuild {
 
         data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
-                Ok(results)
+                Ok( brief_fields.iter().map(|x| x.to_string()).collect() )
 
                 // ComposerIntro::prepare_external_data(&results)
                 //     .ok_or("Error external data convert!".to_string())
