@@ -55,9 +55,10 @@ impl ComposerIntro {
 
 
 
-            // coll.drop().unwrap();
-            let num = rand::thread_rng().gen_range(0, 1000);
-            Ok( vec![ Value::String( num.to_string() ) ] )
+            coll.drop().unwrap();
+            let result = ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap();
+            // let result = rand::thread_rng().gen_range(0, 1000);
+            Ok( vec![ result ] )
 
 
 
