@@ -85,19 +85,21 @@ impl ComposerBuild {
         data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
 
-                ComposerIntro::prepare_external_data(&results)
-                    .ok_or("Error external data convert!".to_string())
-                    .and_then(|arr| {
-                        let docs = arr.iter()
-                            .map(|v| prepare_to_doc(Some(v), id_key))
-                            .filter(|d| d.is_some())
-                            .map(|d| d.unwrap().clone())
-                            .collect::<Vec<OrderedDocument>>();
-                        coll.insert_many(docs, None)
-                            .map_err(|_| "Error write doc into Mongo!".to_string())
-                            .and_then(|_| Ok("Success write data"))
-                    })
-                    .and_then(|_| Ok(results))
+                Ok(results)
+
+                // ComposerIntro::prepare_external_data(&results)
+                //     .ok_or("Error external data convert!".to_string())
+                //     .and_then(|arr| {
+                //         let docs = arr.iter()
+                //             .map(|v| prepare_to_doc(Some(v), id_key))
+                //             .filter(|d| d.is_some())
+                //             .map(|d| d.unwrap().clone())
+                //             .collect::<Vec<OrderedDocument>>();
+                //         coll.insert_many(docs, None)
+                //             .map_err(|_| "Error write doc into Mongo!".to_string())
+                //             .and_then(|_| Ok("Success write data"))
+                //     })
+                //     .and_then(|_| Ok(results))
             })
     }
 
