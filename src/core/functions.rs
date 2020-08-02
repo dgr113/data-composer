@@ -48,9 +48,7 @@ impl ComposerIntro {
             //     };
             // }
 
-            if is_force_update {
-                ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
-            }
+            ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
 
             Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
