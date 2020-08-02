@@ -16,7 +16,6 @@ use rand::{Rng};
 
 
 
-
 pub struct ComposerIntro {}
 
 impl ComposerIntro {
@@ -52,17 +51,12 @@ impl ComposerIntro {
             //         println!("Error with update assets data!")
             //     };
             // }
-
+            // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
 
 
             coll.drop().unwrap();
             let result = ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap();
-            // let result = rand::thread_rng().gen_range(0, 1000);
             Ok( vec![ result ] )
-
-
-
-            // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
 
 
@@ -91,21 +85,21 @@ impl ComposerBuild {
 
         data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
             .and_then(|results| {
-                Ok( brief_fields.iter().map(|x| x.to_string()).collect() )
+                ComposerIntro::prepare_external_data(&results)
+                    .ok_or("Error external data convert!".to_string())
+                    .and_then(|arr| {
+                        let docs = arr.iter()
+                            .map(|v| prepare_to_doc(Some(v), id_key))
+                            .filter(|d| d.is_some())
+                            .map(|d| d.unwrap().clone())
+                            .collect::<Vec<OrderedDocument>>();
+                        coll.insert_many(docs, None)
+                            .map_err(|_| "Error write doc into Mongo!".to_string())
+                            .and_then(|_| Ok("Success write data"))
+                    })
+                    .and_then(|_| Ok(results))
 
-                // ComposerIntro::prepare_external_data(&results)
-                //     .ok_or("Error external data convert!".to_string())
-                //     .and_then(|arr| {
-                //         let docs = arr.iter()
-                //             .map(|v| prepare_to_doc(Some(v), id_key))
-                //             .filter(|d| d.is_some())
-                //             .map(|d| d.unwrap().clone())
-                //             .collect::<Vec<OrderedDocument>>();
-                //         coll.insert_many(docs, None)
-                //             .map_err(|_| "Error write doc into Mongo!".to_string())
-                //             .and_then(|_| Ok("Success write data"))
-                //     })
-                //     .and_then(|_| Ok(results))
+                // Ok( brief_fields.iter().map(|x| x.to_string()).collect() )
             })
     }
 
