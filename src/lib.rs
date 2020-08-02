@@ -1,33 +1,53 @@
+extern crate bson;
+extern crate mongodb;
 extern crate serde_json;
 extern crate serde_yaml;
 extern crate data_finder;
 extern crate data_getter;
 
 use std::io;
-use std::collections::HashMap;
 
 pub mod core;
-pub use crate::core::functions::{ExtraInterface};
-pub use crate::core::config_utils::{TreeParams, BriefParams};
+pub use crate::core::functions::{ComposerIntro};
+pub use crate::core::config_utils::{Params};
 use data_getter::ResultParse;
+use mongodb::coll::Collection;
+use serde_json::{Value as SerdeJsonValue};
 
 
 
-pub struct ApiInterface {}
+pub struct ComposerApi {}
 
-impl ApiInterface {
+impl ComposerApi {
     /// Get a brief description of a given content type
-    pub fn get_full(app_type: &str, lang: &str, config: HashMap<String, String>, force_update: bool) -> ResultParse<serde_json::Value> {
-        let access_key = &[lang, ];
-        let tree_params = TreeParams::build_params(&config, app_type);
-        let brief_params = BriefParams::build_params(&config, app_type,  access_key);
-        ExtraInterface::get_full(tree_params, brief_params, "mapping", force_update)
-    }
+    ///
+    /// # Parameters:
+    /// `id_key`: Field of every document in <arr_data> interpreted as database document ID
+    ///
+    pub fn get_full(
+        finder_config: &SerdeJsonValue,
+        getter_config: &SerdeJsonValue,
+        app_type: &str,
+        coll: &Collection,
+        lang: &str,
+        update: Option<bool>,
+        filter: Option<&SerdeJsonValue>,
+        id_key: Option<&str>
+
+    )  -> ResultParse<Vec<SerdeJsonValue>>
+        {
+            let access_key = &[lang, ];
+            let params = Params::build_params(getter_config, app_type, access_key);
+            ComposerIntro::get_full(params, finder_config, coll, update, filter, id_key)
+        }
 
 
     /// Get a brief description of a given content type
-    pub fn get_tree(app_type: &str, config: HashMap<String, String>, force_update: bool) -> Result<serde_yaml::Value, io::Error> {
-        let params = TreeParams::build_params(&config, app_type);
-        ExtraInterface::get_tree(params, force_update)
-    }
+    pub fn get_tree(finder_config: &SerdeJsonValue, getter_config: &SerdeJsonValue, app_type: &str)
+        -> Result<serde_yaml::Value, io::Error>
+        {
+            let access_key = &["", ];
+            let params = Params::build_params(getter_config, app_type, access_key);
+            ComposerIntro::get_tree(params, finder_config)
+        }
 }

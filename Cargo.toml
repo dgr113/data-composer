@@ -6,8 +6,10 @@ edition = "2018"
 
 
 [dependencies]
-log = "0.4.8"
-serde_json = "1.0.41"
+serde_json = "1.0.48"
 serde_yaml = "0.8.11"
-data-finder = { git = "https://github.com/pewpew79/data-finder.git", branch = "master" }
+log = "0.4.8"
+mongodb = "0.3.12"
+bson = "0.13.0"
+data-finder = { git = "https://github.com/pewpew79/data-finder.git", branch = "simplify-code-test" }
 data-getter = { git = "https://github.com/pewpew79/data-getter.git", branch = "master" }

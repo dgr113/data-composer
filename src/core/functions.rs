@@ -1,36 +1,55 @@
 use std::path::Path;
 use std::{fs, io};
-use std::collections::HashMap;
 
+use mongodb::coll::Collection;
 use data_getter::ResultParse;
-use crate::core::io_utils::{dump_json, parse_json, dump_yaml, parse_yaml};
+
 use crate::core::common_utils::{get_dummy_error};
-pub use crate::core::config_utils::{TreeParams, BriefParams};
+use crate::core::io_utils::{dump_yaml, parse_yaml};
+use crate::core::storage_utils::{check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc};
+pub use crate::core::config_utils::Params;
+use bson::ordered::OrderedDocument;
+use serde_json::Value;
 
 
+pub struct ComposerIntro {}
 
-pub struct ExtraInterface {}
+impl ComposerIntro {
 
-impl ExtraInterface {
+    /** Convert serde_json Value into vector or values (for later conversion in BSON docs) **/
+    fn prepare_external_data(v: &serde_json::Value) -> Option<Vec<&serde_json::Value>> {
+        let mut res = Vec::new();
+        if v.is_object() { res = v.as_object().unwrap().values().collect(); }
+        else if v.is_array() { res = v.as_array().unwrap().iter().collect(); }
+        else { res.push(v); }
+        Some(res)
+    }
+
 
     /// Check state for update tree
-    pub fn get_tree(tree_params: TreeParams, is_force_update: bool) -> Result<serde_yaml::Value, io::Error> {
-        match is_force_update || !Path::new(&tree_params.save_path).exists() {
-            true => IntroInterface::update_tree(&tree_params),
-            false => fs::read_to_string(tree_params.save_path).and_then(parse_yaml)
+    pub fn get_tree(params: Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
+        match !Path::new(&params.tree_path).exists() {
+            true => ComposerBuild::get_updated_tree(&params, finder_config),
+            false => fs::read_to_string(params.tree_path).and_then(parse_yaml)
         }
     }
 
 
-    pub fn get_full(tree_params: TreeParams, brief_params: BriefParams, tree_order_key: &str, is_force_update: bool) -> ResultParse<serde_json::Value> {
-        match is_force_update || !Path::new(&brief_params.save_path).exists() {
-            true => IntroInterface::update_full(&tree_params, &brief_params, tree_order_key),
+    pub fn get_full(params: Params, finder_config: &serde_json::Value, coll: &Collection, update: Option<bool>, filter: Option<&serde_json::Value>, id_key: Option<&str>)
+        -> ResultParse<Vec<serde_json::Value>>
+        {
+            let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
+            let is_force_update = update.unwrap_or(false);
 
-            false => fs::read_to_string(&brief_params.save_path)
-                .map_err(|err| err.to_string())
-                .and_then(parse_json)
+            if is_force_update { coll.drop().unwrap(); }
+            if is_force_update || !check_coll_exists(coll) {
+                if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
+                    println!("Error with update assets data!")
+                };
+            }
+
+            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
-    }
 
 
     /// Get compose (natural key for access YAML field)
@@ -41,23 +60,9 @@ impl ExtraInterface {
 
 
 
-struct IntroInterface {}
+struct ComposerBuild {}
 
-impl IntroInterface {
-    /// Get main ordered keys from file or from tree
-    fn get_ordered_keys(tree: serde_yaml::Value, brief_params: &BriefParams, tree_order_key: &str) -> Vec<String> {
-       match fs::read_to_string(&brief_params.order_path) {
-            Ok(content) => content.lines().map(String::from).collect::<Vec<_>>(),
-            Err(_) => {
-                println!("Warning: Assets order file not found! Getting keys from Tree...");
-                let root_mapping: HashMap<String, serde_yaml::Value> = serde_yaml::from_value(tree).expect("Error parse Content Tree mapping (content-machiner)");
-                root_mapping[tree_order_key].as_mapping().expect("Error parse Content Tree mapping (content-machiner)")
-                    .iter().map(|(k, _)| k.as_str().unwrap().to_string()).collect::<Vec<_>>()
-            }
-        }
-    }
-
-
+impl ComposerBuild {
     /// Update brief (if needed)
     ///
     /// # Parameters:
@@ -66,28 +71,31 @@ impl IntroInterface {
     /// `brief_fields`: Json fields for extracting
     /// `add_key_components`: Additional external composite key components
     ///
-    fn update_full(tree_params: &TreeParams, brief_params: &BriefParams, tree_order_key: &str) -> ResultParse<serde_json::Value> {
-        let tree = Self::update_tree(tree_params).expect("Error with create tree on full-update stage!");
-        let brief_fields = &brief_params.brief_fields.iter().map(|s| s.as_str()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
+    fn get_updated_full(params: &Params, finder_config: &Value, coll: &Collection, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
+        let tree = Self::get_updated_tree(params, finder_config).expect("Error with create tree on full-update stage!");
+        let brief_fields = &params.brief_fields.iter().map(|s| s.as_ref()).collect::<Vec<&str>>(); // NEED TO REFACTOR!
 
-        data_getter::run(&tree, brief_params.access_key, "MESSAGE", Some(brief_fields), Some("."))
-            .and_then(|result|
-                serde_json::to_value(&result)
-                    .or_else(get_dummy_error)
-                    .and_then(dump_json)
-                    .and_then(|v| {
-                        fs::create_dir_all(Path::new(&brief_params.save_path).parent().unwrap());  // Try to create parent directories
-                        fs::write(&brief_params.save_path, v).or_else(|err| {
-                            println!("Error write briefs into file: {}", &err.to_string());
-                            get_dummy_error(err)
-                        });
-                        Ok(result)
-                    }).map_err(|err| err.to_string())
-            )
+        data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
+            .and_then(|results| {
+
+                ComposerIntro::prepare_external_data(&results)
+                    .ok_or("Error external data convert!".to_string())
+                    .and_then(|arr| {
+                        let docs = arr.iter()
+                            .map(|v| prepare_to_doc(Some(v), id_key))
+                            .filter(|d| d.is_some())
+                            .map(|d| d.unwrap().clone())
+                            .collect::<Vec<OrderedDocument>>();
+                        coll.insert_many(docs, None)
+                            .map_err(|_| "Error write doc into Mongo!".to_string())
+                            .and_then(|_| Ok("Success write data"))
+                    })
+                    .and_then(|_| Ok(results))
+            })
     }
 
 
-    /// Update tree (if needed)
+    /// Update tree and return it
     ///
     /// # Parameters:
     /// `update_mark_path`: Path to identifity update process mark
@@ -95,19 +103,20 @@ impl IntroInterface {
     /// `sniffer_config_path`: Path to sniffer for build tree
     /// `app_type`: App type for access sniffer settings in config
     ///
-    fn update_tree(params: &TreeParams) -> Result<serde_yaml::Value, io::Error> {
-        let result = data_finder::run(params.sniffer_config_path, params.app_type);  // Run ext sniffer
+    fn get_updated_tree(params: &Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
+        let result = data_finder::run(finder_config.clone(), &params.app_type);  // Run ext data-finder
 
         serde_yaml::to_value(&result)
             .or_else(get_dummy_error)
             .and_then(dump_yaml)
             .and_then(|content| {
-                fs::create_dir_all(Path::new(&params.save_path).parent().unwrap());  // Try to create parent directories
-                fs::write(&params.save_path, content).or_else(|err|{
-                    println!("Error write trees into file: {}", &err.to_string());
-                    get_dummy_error(err)
-                });
+                Path::new(&params.tree_path).parent()
+                    .ok_or("Error with create <tree> directory!")
+                    .and_then(|t| Ok(fs::create_dir_all(t)))
+                    .and_then(|_| fs::write( &params.tree_path, content ).map_err(|_| "Error with write <tree> file!"))
+                    .unwrap();
+
                 Ok(result)
-        })
+            })
     }
 }

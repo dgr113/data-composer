@@ -34,6 +34,7 @@ pub fn dump_json(content: serde_json::Value) -> Result<String, io::Error> {
 /// # Examples
 /// ```
 /// use content_machiner::core::io_utils::build_filename;
+/// use data_composer::core::io_utils::build_filename;
 /// let main_component = "movies";
 /// let add_components = &["test", "ru-RU"];
 /// let result = build_filename(main_component, Some(add_components), "yml", ".");
@@ -50,6 +51,9 @@ pub fn build_filename(main_component: &str, add_components: Option<&[&str]>, fil
 
 
 /// Build dyn path from component
-pub fn build_path(basedir: &str, filename: &str) -> String {
-    Path::new(basedir).join(filename).to_str().unwrap().to_string()
+pub fn build_path<'a>(basedir: &'a str, filename: &'a str) -> Option<String> {
+    match Path::new(basedir).join(filename).to_str() {
+        Some(t) => Some( t.to_string() ),
+        None => None
+    }
 }
