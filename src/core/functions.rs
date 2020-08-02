@@ -11,6 +11,11 @@ pub use crate::core::config_utils::Params;
 use bson::ordered::OrderedDocument;
 use serde_json::Value;
 
+use rand::{Rng};
+
+
+
+
 
 pub struct ComposerIntro {}
 
@@ -51,7 +56,8 @@ impl ComposerIntro {
 
 
             // coll.drop().unwrap();
-            Ok( vec![ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap()] )
+            let num = rand::thread_rng().gen_range(0, 1000);
+            Ok( vec![ Value::String( num.to_string() ) ] )
 
 
 

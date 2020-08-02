@@ -13,3 +13,5 @@ mongodb = "0.3.12"
 bson = "0.13.0"
 data-finder = { git = "https://github.com/pewpew79/data-finder.git", branch = "simplify-code-test" }
 data-getter = { git = "https://github.com/pewpew79/data-getter.git", branch = "master" }
+
+rand = "0.7.3"
