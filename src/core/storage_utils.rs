@@ -27,13 +27,14 @@ pub fn prepare_to_doc(d: Option<&serde_json::Value>, id_field: Option<&str>) -> 
         }
     }).and_then(|t: bson::Bson| {
         t.as_document().and_then(|d| {
-            let mut d = d.clone();
-            if let Some(id) = id_field {
-                if d.contains_key(id) {
-                    d.insert("_id", d.get(id).unwrap().clone());  // Maybe need to be optimize ...
-                }
-            }
-            Some( d )
+            Some( d.clone() )
+            // let mut d = d.clone();
+            // if let Some(id) = id_field {
+            //     if d.contains_key(id) {
+            //         d.insert("_id", d.get(id).unwrap().clone());  // Maybe need to be optimize ...
+            //     }
+            // }
+            // Some( d )
         })
     })
 }
