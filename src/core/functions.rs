@@ -45,24 +45,20 @@ impl ComposerIntro {
             let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
             let is_force_update = update.unwrap_or(false);
 
-
-            // if is_force_update { coll.drop().unwrap(); }
-            // if is_force_update || !check_coll_exists(coll) {
-            //     if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
-            //         println!("Error with update assets data!")
-            //     };
-            // }
-            // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+            if is_force_update {
+                coll.drop().unwrap();
+            }
+            if !check_coll_exists(coll) {
+                if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
+                    println!("Error with update assets data!")
+                };
+            }
+            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
 
 
             // coll.drop().unwrap();
-            // let result = ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap();
-            // Ok( vec![ result ] )
-
-
-            coll.drop().unwrap();
-            ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
-            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+            // ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
+            // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
 
 
@@ -104,8 +100,6 @@ impl ComposerBuild {
                             .and_then(|_| Ok("Success write data"))
                     })
                     .and_then(|_| Ok(results))
-
-                // Ok( brief_fields.iter().map(|x| x.to_string()).collect() )
             })
     }
 
