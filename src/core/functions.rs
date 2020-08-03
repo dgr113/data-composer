@@ -45,6 +45,7 @@ impl ComposerIntro {
             let filter = prepare_to_doc(filter, None).unwrap_or(OrderedDocument::new());
             let is_force_update = update.unwrap_or(false);
 
+
             // if is_force_update { coll.drop().unwrap(); }
             // if is_force_update || !check_coll_exists(coll) {
             //     if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
@@ -54,9 +55,14 @@ impl ComposerIntro {
             // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
 
 
+            // coll.drop().unwrap();
+            // let result = ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap();
+            // Ok( vec![ result ] )
+
+
             coll.drop().unwrap();
-            let result = ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).unwrap();
-            Ok( vec![ result ] )
+            ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
+            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
         }
 
 
