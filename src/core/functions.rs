@@ -1,8 +1,6 @@
 use std::path::Path;
 use std::{fs, io};
 
-pub use mongodb;
-
 use mongodb::coll::Collection;
 use data_getter::ResultParse;
 
