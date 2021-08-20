@@ -1,16 +1,30 @@
 [package]
 name = "data-composer"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["pewpew79 <grigoriev.d3@mail.ru>"]
 edition = "2018"
 
 
+
 [dependencies]
-serde_json = "^1.0"
-serde_yaml = "^0.8"
 log = "^0.4"
 rand = "^0.8"
-mongodb = "1.2.2"
-bson = "0.13.0"
-data-finder = { git = "https://github.com/dgr113/data-finder.git", branch = "simplify-code-test" }
+serde_json = "^1.0"
+serde_yaml = "^0.8"
+bson = "1.2.1"
+mongodb = { version = "1.2.2", features = ["sync"], default-features = false }
 data-getter = { git = "https://github.com/dgr113/data-getter.git", branch = "master" }
+data-finder = { git = "https://github.com/dgr113/data-finder.git", branch = "master" }
+
+
+
+[profile.dev]
+codegen-units = 128
+opt-level = 1
+incremental = true
+
+
+[profile.release]
+codegen-units = 1
+opt-level = 3
+incremental = false

@@ -1,5 +1,3 @@
-pub extern crate mongodb;
-
 pub mod functions;
 pub mod io_utils;
 pub mod data_utils;
