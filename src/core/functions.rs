@@ -30,7 +30,7 @@ impl ComposerIntro {
     {
         match Path::new( &tree_path ).exists() {
             true => fs::read_to_string( &tree_path ).and_then( parse_yaml ),  // If mapping tree file exists - return it
-            false => ComposerBuild::get_updated_tree(finder_config, app_type, tree_path)  // Else - build new mapping and return it
+            false => ComposerBuild::get_updated_tree(finder_config, app_type, &tree_path)  // Else - build new mapping and return it
         }
     }
 

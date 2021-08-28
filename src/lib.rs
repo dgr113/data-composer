@@ -18,6 +18,8 @@ use std::hash::Hash;
 use std::borrow::Borrow;
 
 
+
+
 pub struct ComposerApi;
 
 impl ComposerApi {
@@ -43,8 +45,10 @@ impl ComposerApi {
         // let access_key = &[lang, ];
         // let params = Params::build_params(getter_config, app_type, access_key);
         // ComposerIntro::get_full(params, finder_config, coll, update, filter, id_key)
+
         ComposerIntro::get_full(getter_config, finder_config, coll, update, filter, id_key, app_type, tree_path, access_key)
     }
+
 
     /** Get a brief description of a given content type */
     pub fn get_tree<S>(finder_config: &FinderConfig, app_type: S, tree_path: &str)
