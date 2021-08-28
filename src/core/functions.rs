@@ -8,10 +8,10 @@ use bson::Document;
 use mongodb::sync::Collection;
 use mongodb::options::DropCollectionOptions;
 
-use crate::config::ComposerConfig;
 use data_finder::config::FinderConfig;
 use data_getter::{ ResultParse, GetterConfig };
 
+use crate::config::ComposerConfig;
 use crate::core::common_utils::get_dummy_error;
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
@@ -23,10 +23,9 @@ pub struct ComposerIntro;
 
 impl ComposerIntro {
     /** Check state for update tree */
-    pub fn get_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P)
-        -> Result<serde_yaml::Value, io::Error>
-            where S: Into<String> + Hash + Eq, String: Borrow<S>,
-                  P: AsRef<Path> + AsRef<OsStr>
+    pub fn get_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, io::Error>
+        where S: Into<String> + Hash + Eq, String: Borrow<S>,
+              P: AsRef<Path> + AsRef<OsStr>
     {
         match Path::new( &tree_path ).exists() {
             true => fs::read_to_string( &tree_path ).and_then( parse_yaml ),  // If mapping tree file exists - return it
@@ -146,10 +145,9 @@ impl ComposerBuild {
     * `sniffer_config_path`: Path to sniffer for build tree
     * `app_type`: App type for access sniffer settings in config
     */
-    fn get_updated_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P)
-        -> Result<serde_yaml::Value, io::Error>
-            where S: Into<String> + Hash + Eq, String: Borrow<S>,
-                  P: AsRef<Path> + AsRef<OsStr>
+    fn get_updated_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, io::Error>
+        where S: Into<String> + Hash + Eq, String: Borrow<S>,
+              P: AsRef<Path> + AsRef<OsStr>
     {
         let result = data_finder::run(finder_config.clone(), app_type).expect( "Data Finder internal error !" ) ;  // Run ext data-finder
 
