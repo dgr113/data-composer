@@ -1,20 +1,20 @@
 use std::{ fs, io };
 use std::path::Path;
+use std::hash::Hash;
+use std::ffi::OsStr;
+use std::borrow::Borrow;
 
 use bson::Document;
 use mongodb::sync::Collection;
 use mongodb::options::DropCollectionOptions;
 
-pub use crate::core::config_utils::Params;
+use crate::config::ComposerConfig;
+use data_finder::config::FinderConfig;
+use data_getter::{ ResultParse, GetterConfig };
+
 use crate::core::common_utils::get_dummy_error;
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
-
-use data_finder::config::FinderConfig;
-use data_getter::{ ResultParse, GetterConfig };
-use std::hash::Hash;
-use std::borrow::Borrow;
-use std::ffi::OsStr;
 
 
 
@@ -43,8 +43,7 @@ impl ComposerIntro {
      * 'access_key' : Compose key for partial access to content Tree
      */
     pub fn get_full<S, K, P>(
-        getter_config: &GetterConfig,
-        finder_config: &FinderConfig,
+        composer_config: &ComposerConfig,
         coll: &Collection,
         update: Option<bool>,
         filter: Option<&serde_json::Value>,
@@ -64,7 +63,7 @@ impl ComposerIntro {
             coll.drop( drop_coll_opts ).unwrap();
         }
         if !check_coll_exists( coll ) {
-            if ComposerBuild::get_updated_full(getter_config, finder_config, coll, id_key, app_type, tree_path, access_key).is_err() {
+            if ComposerBuild::get_updated_full(composer_config, coll, id_key, app_type, tree_path, access_key).is_err() {
                 println!("Error with update assets data!")
             };
         }
@@ -105,8 +104,7 @@ impl ComposerBuild {
     * `add_key_components`: Additional external composite key components
     */
     fn get_updated_full<S, K, P>(
-        getter_config: &GetterConfig,
-        finder_config: &FinderConfig,
+        composer_config: &ComposerConfig,
         coll: &Collection,
         id_key: Option<&str>,
         app_type: S,
@@ -118,9 +116,9 @@ impl ComposerBuild {
                   K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
-        let tree = Self::get_updated_tree(finder_config, app_type, tree_path).expect( "Error with create tree on full-update stage!" );
+        let tree = Self::get_updated_tree(&composer_config.data_finder, app_type, tree_path).expect( "Error with create tree on full-update stage!" );
 
-        data_getter::run(&tree, getter_config.clone(), access_key)
+        data_getter::run(&tree, composer_config.data_getter.clone(), access_key)
             .and_then( |results| {
                 Self::prepare_external_data( &results )
                     .ok_or(  data_getter::errors::ApiError::SimpleMsgError( "Error external data convert!".to_string() ) )

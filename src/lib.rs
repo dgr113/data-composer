@@ -12,12 +12,16 @@ use mongodb::sync::Collection;
 use serde_json::Value as SerdeJsonValue;
 
 pub mod core;
-pub use crate::core::config_utils::Params;
-pub use crate::core::functions::ComposerIntro;
+mod config;
+mod errors;
 
 use data_getter::ResultParse;
-use data_getter::GetterConfig;
 use data_finder::config::FinderConfig;
+
+use crate::config::ComposerConfig;
+
+pub use crate::core::config_utils::Params;
+pub use crate::core::functions::ComposerIntro;
 
 
 
@@ -31,8 +35,7 @@ impl ComposerApi {
     * `id_key`: Field of every document in <arr_data> interpreted as database document ID
     */
     pub fn get_full<S, K, P>(
-        finder_config: &FinderConfig,
-        getter_config: &GetterConfig,
+        composer_config: &ComposerConfig,
         app_type: S,
         coll: &Collection,
         access_key: &[K],
@@ -42,14 +45,11 @@ impl ComposerApi {
         tree_path: P
     )
         -> ResultParse<Vec<SerdeJsonValue>>
-        where S: Into<String> + Hash + Eq, String: Borrow<S>,
-              K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
-              P: AsRef<Path> + AsRef<OsStr>
+            where S: Into<String> + Hash + Eq, String: Borrow<S>,
+                  K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
+                  P: AsRef<Path> + AsRef<OsStr>
     {
-        // let access_key = &[lang, ];
-        // let params = Params::build_params(getter_config, app_type, access_key);
-        // ComposerIntro::get_full(params, finder_config, coll, update, filter, id_key)
-        ComposerIntro::get_full(getter_config, finder_config, coll, update, filter, id_key, app_type, tree_path, access_key)
+        ComposerIntro::get_full(composer_config, coll, update, filter, id_key, app_type, tree_path, access_key)
     }
 
 
@@ -59,8 +59,6 @@ impl ComposerApi {
             where S: Into<String> + Hash + Eq, String: Borrow<S>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
-        // let access_key = &["", ];
-        // let params = Params::build_params(getter_config, app_type, access_key);
         ComposerIntro::get_tree(finder_config, app_type, tree_path)
     }
 }
