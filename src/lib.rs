@@ -14,8 +14,8 @@ pub use crate::core::functions::ComposerIntro;
 use data_getter::ResultParse;
 use data_getter::GetterConfig;
 use data_finder::config::FinderConfig;
-
-
+use std::hash::Hash;
+use std::borrow::Borrow;
 
 
 pub struct ComposerApi;
@@ -29,7 +29,7 @@ impl ComposerApi {
     pub fn get_full<S>(
         finder_config: &FinderConfig,
         getter_config: &GetterConfig,
-        app_type: &str,
+        app_type: S,
         coll: &Collection,
         access_key: &[S],
         update: Option<bool>,
@@ -38,7 +38,7 @@ impl ComposerApi {
         tree_path: &str
     )
         -> ResultParse<Vec<SerdeJsonValue>>
-            where S: Into<String> + serde_yaml::Index
+            where S: Into<String> + ToString + Hash + Eq + serde_yaml::Index, String: Borrow<S>
     {
         // let access_key = &[lang, ];
         // let params = Params::build_params(getter_config, app_type, access_key);
@@ -47,9 +47,9 @@ impl ComposerApi {
     }
 
     /** Get a brief description of a given content type */
-    pub fn get_tree<S>(finder_config: &FinderConfig, app_type: &str, tree_path: &str)
+    pub fn get_tree<S>(finder_config: &FinderConfig, app_type: S, tree_path: &str)
         -> Result<serde_yaml::Value, io::Error>
-            where S: Into<String>
+            where S: Into<String> + Hash + Eq, String: Borrow<S>
     {
         // let access_key = &["", ];
         // let params = Params::build_params(getter_config, app_type, access_key);
