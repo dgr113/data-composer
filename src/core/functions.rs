@@ -1,7 +1,6 @@
-use std::path::Path;
 use std::{ fs, io };
+use std::path::Path;
 
-use serde_json::Value;
 use bson::Document;
 use mongodb::sync::Collection;
 use mongodb::options::DropCollectionOptions;
@@ -11,7 +10,8 @@ use crate::core::common_utils::get_dummy_error;
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
 
-use data_getter::ResultParse;
+use data_finder::config::FinderConfig;
+use data_getter::{ ResultParse, GetterConfig };
 
 
 
@@ -20,38 +20,49 @@ pub struct ComposerIntro;
 
 impl ComposerIntro {
     /** Check state for update tree */
-    pub fn get_tree(params: Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
-        match Path::new( &params.tree_path ).exists() {
-            true => fs::read_to_string( params.tree_path ).and_then( parse_yaml ),  // If mapping tree file exists - return it
-            false => ComposerBuild::get_updated_tree(&params, finder_config),  // Else - build new mapping and return it
+    pub fn get_tree(finder_config: &FinderConfig, app_type: &str, tree_path: &str) -> Result<serde_yaml::Value, io::Error> {
+        match Path::new( tree_path ).exists() {
+            true => fs::read_to_string( tree_path ).and_then( parse_yaml ),  // If mapping tree file exists - return it
+            false => ComposerBuild::get_updated_tree(finder_config, app_type, tree_path)  // Else - build new mapping and return it
         }
     }
 
     /** Get compose data from tree by natural key */
-    pub fn get_from_tree<'a>(tree: &'a serde_yaml::Value, access_key: &[&str]) -> ResultParse<serde_json::Value> {
-        data_getter::run(tree, &access_key, "MESSAGE", None, None)
+    pub fn get_from_tree<'a>(tree: &'a serde_yaml::Value, getter_config: &GetterConfig, access_key: &[String]) -> ResultParse<serde_json::Value> {
+        data_getter::run(tree, getter_config.clone(), access_key)
     }
 
     /** Get full data from mapping tree */
-    pub fn get_full(params: Params, finder_config: &serde_json::Value, coll: &Collection, update: Option<bool>, filter: Option<&serde_json::Value>, id_key: Option<&str>)
+    pub fn get_full<S>(
+        getter_config: &GetterConfig,
+        finder_config: &FinderConfig,
+        coll: &Collection,
+        update: Option<bool>,
+        filter: Option<&serde_json::Value>,
+        id_key: Option<&str>,
+        app_type: &str,
+        tree_path: &str,
+        access_key: &[S]
+    )
         -> ResultParse<Vec<serde_json::Value>>
-        {
-            let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
-            if update.unwrap_or( false ) {
-                let drop_coll_opts = DropCollectionOptions::default();
-                coll.drop( drop_coll_opts ).unwrap();
-            }
-            if !check_coll_exists( coll ) {
-                if ComposerBuild::get_updated_full(&params, finder_config, coll, id_key).is_err() {
-                    println!("Error with update assets data!")
-                };
-            }
-            Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
-
-            // coll.drop().unwrap();
-            // ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
-            // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+            where S: Into<String> + serde_yaml::Index
+    {
+        let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
+        if update.unwrap_or( false ) {
+            let drop_coll_opts = DropCollectionOptions::default();
+            coll.drop( drop_coll_opts ).unwrap();
         }
+        if !check_coll_exists( coll ) {
+            if ComposerBuild::get_updated_full(getter_config, finder_config, coll, id_key, app_type, tree_path, access_key).is_err() {
+                println!("Error with update assets data!")
+            };
+        }
+        Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+
+        // coll.drop().unwrap();
+        // ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
+        // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+    }
 }
 
 
@@ -82,14 +93,24 @@ impl ComposerBuild {
     * `brief_fields`: Json fields for extracting
     * `add_key_components`: Additional external composite key components
     */
-    fn get_updated_full(params: &Params, finder_config: &Value, coll: &Collection, id_key: Option<&str>) -> ResultParse<serde_json::Value> {
-        let tree = Self::get_updated_tree(params, finder_config).expect( "Error with create tree on full-update stage!" );
-        let brief_fields = &params.brief_fields.iter().map( |s| s.as_ref() ).collect::<Vec<&str>>(); // NEED TO REFACTOR!
+    fn get_updated_full<S>(
+        getter_config: &GetterConfig,
+        finder_config: &FinderConfig,
+        coll: &Collection,
+        id_key: Option<&str>,
+        app_type: &str,
+        tree_path: &str,
+        access_key: &[S]
+    )
+        -> Result<serde_json::Value, data_getter::errors::ApiError>
+            where S: Into<String> + serde_yaml::Index
+    {
+        let tree = Self::get_updated_tree(finder_config, app_type, tree_path).expect( "Error with create tree on full-update stage!" );
 
-        data_getter::run(&tree, params.access_key, "MESSAGE", Some(brief_fields), Some("."))
+        data_getter::run(&tree, getter_config.clone(), access_key)
             .and_then( |results| {
                 Self::prepare_external_data( &results )
-                    .ok_or( "Error external data convert!".to_string() )
+                    .ok_or(  data_getter::errors::ApiError::SimpleMsgError( "Error external data convert!".to_string() ) )
                     .and_then( |arr| {
                         let docs = arr.iter()
                             .map( |v| prepare_to_doc(Some(v), id_key) )
@@ -98,7 +119,7 @@ impl ComposerBuild {
                             .collect::<Vec<Document>>();
 
                         let res = coll.insert_many(docs, None)
-                            .map_err( |_| "Error write doc into Mongo!".to_string() );
+                            .map_err( |_| data_getter::errors::ApiError::SimpleMsgError( "Error write doc into Mongo!".to_string() ) );
                             // .and_then( |_| Ok( "Success write data" ) );
                         res
                     })
@@ -114,18 +135,19 @@ impl ComposerBuild {
     * `sniffer_config_path`: Path to sniffer for build tree
     * `app_type`: App type for access sniffer settings in config
     */
-    fn get_updated_tree(params: &Params, finder_config: &Value) -> Result<serde_yaml::Value, io::Error> {
-        let result = data_finder::run(finder_config.clone(), &params.app_type);  // Run ext data-finder
+    fn get_updated_tree(finder_config: &FinderConfig, app_type: &str, tree_path: &str) -> Result<serde_yaml::Value, io::Error> {
+        let result = data_finder::run(finder_config.clone(), app_type).expect( "Data Finder internal error !" ) ;  // Run ext data-finder
 
         serde_yaml::to_value( &result )
             .or_else( get_dummy_error )
             .and_then( dump_yaml )
             .and_then( |content| {
-                Path::new( &params.tree_path ).parent()
+                // Path::new( &getter_config.tree_path ).parent()
+                Path::new( tree_path ).parent()
                     .ok_or( "Error with create <tree> directory!" )
                     .and_then( |t| Ok( fs::create_dir_all( t ) ) )
                     .and_then( |_| {
-                        fs::write(&params.tree_path, content)
+                        fs::write(tree_path, content)
                             .map_err( |_| "Error with writing mapping file!" )
                     })
                     .unwrap();
