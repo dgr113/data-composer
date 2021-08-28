@@ -2,7 +2,6 @@ pub extern crate mongodb;
 pub extern crate data_finder;
 pub extern crate data_getter;
 
-use std::io;
 use std::hash::Hash;
 use std::path::Path;
 use std::ffi::OsStr;
@@ -21,8 +20,7 @@ use data_finder::config::FinderConfig;
 pub use crate::config::ComposerConfig;
 pub use crate::core::config_utils::Params;
 pub use crate::core::functions::ComposerIntro;
-
-
+use crate::errors::ApiError;
 
 
 pub struct ComposerApi;
@@ -53,10 +51,9 @@ impl ComposerApi {
 
 
     /** Get a brief description of a given content type */
-    pub fn get_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P)
-        -> Result<serde_yaml::Value, io::Error>
-            where S: Into<String> + Hash + Eq, String: Borrow<S>,
-                  P: AsRef<Path> + AsRef<OsStr>
+    pub fn get_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, ApiError>
+        where S: Into<String> + Hash + Eq, String: Borrow<S>,
+              P: AsRef<Path> + AsRef<OsStr>
     {
         ComposerIntro::get_tree(finder_config, app_type, tree_path)
     }

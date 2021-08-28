@@ -1,4 +1,3 @@
-use std::io;
 use std::path::Path;
 
 use log::info;
@@ -25,10 +24,4 @@ pub fn write_err_log(msg: &str, log_channel: LogChannel) {
 /** Build dyn path from component */
 pub fn build_path(basedir: &str, filename: &str) -> String {
     Path::new( basedir ).join( filename ).to_str().unwrap().to_string()
-}
-
-
-/** Convert any result to dummy Error */
-pub fn get_dummy_error<T, V>( _err: T ) -> Result<V, io::Error> {
-    Err( io::Error::from( io::ErrorKind::BrokenPipe ) )
 }
