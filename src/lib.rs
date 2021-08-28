@@ -18,8 +18,7 @@ mod errors;
 use data_getter::ResultParse;
 use data_finder::config::FinderConfig;
 
-use crate::config::ComposerConfig;
-
+pub use crate::config::ComposerConfig;
 pub use crate::core::config_utils::Params;
 pub use crate::core::functions::ComposerIntro;
 
