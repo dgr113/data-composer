@@ -2,17 +2,17 @@ pub extern crate mongodb;
 pub extern crate data_finder;
 pub extern crate data_getter;
 
+use std::ffi::OsStr;
 use std::hash::Hash;
 use std::path::Path;
-use std::ffi::OsStr;
 use std::borrow::Borrow;
 
 use mongodb::sync::Collection;
 use serde_json::Value as SerdeJsonValue;
 
 pub mod core;
-mod config;
-mod errors;
+pub mod errors;
+pub mod config;
 
 use data_getter::ResultParse;
 use data_finder::config::FinderConfig;
@@ -20,7 +20,9 @@ use data_finder::config::FinderConfig;
 pub use crate::config::ComposerConfig;
 pub use crate::core::config_utils::Params;
 pub use crate::core::functions::ComposerIntro;
-use crate::errors::ApiError;
+pub use crate::errors::ApiError;
+
+
 
 
 pub struct ComposerApi;
