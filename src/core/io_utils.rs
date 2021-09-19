@@ -4,18 +4,22 @@ use std::path::Path;
 use serde_yaml;
 use serde_json;
 
+use crate::errors::ApiError;
+
 
 
 
 /** Parse YAML file */
-pub fn parse_yaml( content: String ) -> Result<serde_yaml::Value, io::Error> {
-    serde_yaml::from_str( &content ).or_else( |_| Err( io::Error::from( io::ErrorKind::BrokenPipe ) ) )
+pub fn parse_yaml( content: String ) -> Result<serde_yaml::Value, ApiError> {
+    let result = serde_yaml::from_str( &content ) ?;
+    Ok( result )
 }
 
 
 /** Dump YAML file */
-pub fn dump_yaml( content: serde_yaml::Value ) -> Result<String, io::Error> {
-    serde_yaml::to_string( &content ).or_else( |_| Err( io::Error::from( io::ErrorKind::BrokenPipe ) ) )
+pub fn dump_yaml( content: serde_yaml::Value ) -> Result<String, ApiError> {
+    let result = serde_yaml::to_string( &content ) ?;
+    Ok( result )
 }
 
 
