@@ -22,6 +22,12 @@ use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_conve
 pub struct ComposerIntro;
 
 impl ComposerIntro {
+    /** Get compose data from tree by natural key */
+    pub fn get_from_tree<'a>(tree: &'a serde_yaml::Value, getter_config: &GetterConfig, access_key: &[String]) -> Result<serde_json::Value, ApiError> {
+        let result = data_getter::run(tree, getter_config.clone(), access_key) ?;
+        Ok( result )
+    }
+
     /** Check state for update tree */
     pub fn get_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, ApiError>
         where S: Into<String> + Hash + Eq, String: Borrow<S>,
@@ -31,11 +37,6 @@ impl ComposerIntro {
             true => fs::read_to_string( &tree_path ).map_err( |err| ApiError::IOError( err.to_string() ) ).and_then( parse_yaml ),  // If mapping tree file exists - return it
             false => ComposerBuild::get_updated_tree(finder_config, app_type, &tree_path)  // Else - build new mapping and return it
         }
-    }
-
-    /** Get compose data from tree by natural key */
-    pub fn get_from_tree<'a>(tree: &'a serde_yaml::Value, getter_config: &GetterConfig, access_key: &[String]) -> ResultParse<serde_json::Value> {
-        data_getter::run(tree, getter_config.clone(), access_key)
     }
 
     /** Get full data from mapping tree
