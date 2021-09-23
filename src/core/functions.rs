@@ -73,11 +73,11 @@ impl ComposerIntro {
 
 
 
-struct ComposerBuild;
+pub struct ComposerBuild;
 
 impl ComposerBuild {
     /** Convert serde_json Value into vector or values (for later conversion in BSON docs) */
-    fn prepare_external_data( v: &serde_json::Value ) -> Option<Vec<&serde_json::Value>> {
+    pub fn prepare_external_data( v: &serde_json::Value ) -> Option<Vec<&serde_json::Value>> {
         let mut res = Vec::new();
         if v.is_object() {
             res = v.as_object().unwrap().values().collect();
@@ -99,7 +99,7 @@ impl ComposerBuild {
     * `brief_fields`: Json fields for extracting
     * `add_key_components`: Additional external composite key components
     */
-    fn get_updated_full<S, K, P>(
+    pub fn get_updated_full<S, K, P>(
         composer_config: &ComposerConfig,
         coll: &Collection,
         id_key: Option<&str>,
@@ -158,7 +158,7 @@ impl ComposerBuild {
     * `sniffer_config_path`: Path to sniffer for build tree
     * `app_type`: App type for access sniffer settings in config
     */
-    fn get_updated_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, ApiError>
+    pub fn get_updated_tree<S, P>(finder_config: &FinderConfig, app_type: S, tree_path: P) -> Result<serde_yaml::Value, ApiError>
         where S: Into<String> + Hash + Eq, String: Borrow<S>,
               P: AsRef<Path> + AsRef<OsStr>
     {
