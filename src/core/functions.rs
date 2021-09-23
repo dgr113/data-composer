@@ -61,7 +61,7 @@ impl ComposerIntro {
         let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
         if update.unwrap_or( false ) {
             // let drop_coll_opts = DropCollectionOptions::default();
-            // coll.drop( None ).unwrap();
+            coll.drop( None ).unwrap();
         }
         if !check_coll_exists( coll ) {
             if ComposerBuild::get_updated_full(composer_config, coll, id_key, app_type, tree_path, access_key).is_err() {
