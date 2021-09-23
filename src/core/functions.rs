@@ -68,10 +68,6 @@ impl ComposerIntro {
             };
         }
         Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
-
-        // coll.drop().unwrap();
-        // ComposerBuild::get_updated_full(&params, finder_config, coll, id_key);
-        // Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
     }
 }
 
@@ -117,18 +113,20 @@ impl ComposerBuild {
                   P: AsRef<Path> + AsRef<OsStr>
     {
         let tree = Self::get_updated_tree(&composer_config.data_finder, app_type, tree_path).expect( "Error with create tree on full-update stage!" );
-
         let data_getter_result = data_getter::run(&tree, composer_config.data_getter.clone(), access_key) ?;
 
         Self::prepare_external_data( &data_getter_result )
             .ok_or(  ApiError::GetterApiError( "Error external data convert!".to_string() ) )
             .and_then( |arr| {
-                let docs = arr.iter()
-                    .map( |v| prepare_to_doc(Some(v), id_key) )
-                    .filter( |d| d.is_some() )
-                    .map( |d| d.unwrap().clone() )
-                    .collect::<Vec<Document>>();
-
+                // Creating an vector of only successful conversion results to a <Document>
+                let mut docs = vec![];
+                for d in arr {
+                    match prepare_to_doc(Some( d ), id_key) {
+                        Some( v ) => docs.push( v ),
+                        None => eprintln!("Error with Mongo document conversion data: {:?}", d)
+                    }
+                }
+                // Insert correct BSON documents into database
                 let res = coll.insert_many(docs, None)
                     .map_err( |_| ApiError::GetterApiError( "Error write doc into Mongo!".to_string() ) );
                     // .and_then( |_| Ok( "Success write data" ) );
