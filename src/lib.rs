@@ -47,9 +47,8 @@ impl ComposerApi {
                   K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
-        let app_type = app_type.into();
-        let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );  // ПРОВЕРИТЬ ПУЛ СОЕДИНЕНИЯ С БД !
-        let result = ComposerIntro::get_full(composer_config, &coll, update, filter, id_key, app_type, tree_path, access_key) ?;
+        let app_type = app_type.into();  // Нужно оптимизировать тип!
+        let result = ComposerIntro::get_full(composer_config, db_pool, update, filter, id_key, app_type, tree_path, access_key) ?;
         Ok( result )
     }
 

@@ -15,8 +15,8 @@ use crate::errors::ApiError;
 use crate::config::ComposerConfig;
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
-
-
+use std::sync::{Arc, RwLock};
+use crate::mongodb::sync::Client;
 
 
 pub struct ComposerIntro;
@@ -44,7 +44,7 @@ impl ComposerIntro {
      */
     pub fn get_full<S, K, P>(
         composer_config: &ComposerConfig,
-        coll: &Collection,
+        db_pool: Arc<RwLock<Client>>,
         update: Option<bool>,
         filter: Option<&serde_json::Value>,
         id_key: Option<&str>,
@@ -57,17 +57,22 @@ impl ComposerIntro {
                   K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
+        let app_type = app_type.into();  // Нужно оптимизировать тип!
         let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
+
         if update.unwrap_or( false ) {
-            // coll.drop( None ).unwrap();
-            coll.drop( None ) ?;
+            db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type ).drop( None ) ?;
         }
-        if !check_coll_exists( coll ) {
-            if ComposerBuild::get_updated_full(composer_config, coll, id_key, app_type, tree_path, access_key).is_err() {
+
+        let coll = db_pool.read().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
+        if !check_coll_exists( &coll ) {
+            let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
+            if ComposerBuild::get_updated_full(composer_config, &coll, id_key, app_type, tree_path, access_key).is_err() {
                 println!("Error with update assets data!")
             };
         }
-        Ok( mongo_convert_results( mongo_get_data(coll, filter) ) )
+
+        Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
     }
 }
 
