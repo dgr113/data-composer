@@ -46,7 +46,6 @@ impl ComposerIntro {
     pub fn get_full<S, K, P>(
         composer_config: &ComposerConfig,
         db_pool: Arc<RwLock<Client>>,
-        update: Option<bool>,
         filter: Option<&serde_json::Value>,
         id_key: Option<&str>,
         app_type: S,
@@ -60,10 +59,6 @@ impl ComposerIntro {
     {
         let app_type = app_type.into();  // Нужно оптимизировать тип!
         let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
-
-        if update.unwrap_or( false ) {
-            db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type ).drop( None ) ?;
-        }
 
         let coll = db_pool.read().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
         if !check_coll_exists( &coll ) {

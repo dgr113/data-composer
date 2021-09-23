@@ -37,7 +37,6 @@ impl ComposerApi {
         app_type: S,
         db_pool: Arc<RwLock<Client>>,
         access_key: &[K],
-        update: Option<bool>,
         filter: Option<&SerdeJsonValue>,
         id_key: Option<&str>,
         tree_path: P
@@ -48,7 +47,7 @@ impl ComposerApi {
                   P: AsRef<Path> + AsRef<OsStr>
     {
         let app_type = app_type.into();  // Нужно оптимизировать тип!
-        let result = ComposerIntro::get_full(composer_config, db_pool, update, filter, id_key, app_type, tree_path, access_key) ?;
+        let result = ComposerIntro::get_full(composer_config, db_pool, filter, id_key, app_type, tree_path, access_key) ?;
         Ok( result )
     }
 
