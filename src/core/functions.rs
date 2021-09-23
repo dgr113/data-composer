@@ -3,9 +3,10 @@ use std::path::Path;
 use std::hash::Hash;
 use std::ffi::OsStr;
 use std::borrow::Borrow;
+use std::sync::{ Arc, RwLock };
 
 use bson::Document;
-use mongodb::sync::Collection;
+use mongodb::sync::{ Client, Collection };
 use rayon::prelude::*;
 
 use data_getter::GetterConfig;
@@ -15,8 +16,8 @@ use crate::errors::ApiError;
 use crate::config::ComposerConfig;
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
-use std::sync::{Arc, RwLock};
-use crate::mongodb::sync::Client;
+
+
 
 
 pub struct ComposerIntro;
@@ -71,8 +72,21 @@ impl ComposerIntro {
                 println!("Error with update assets data!")
             };
         }
-
         Ok( mongo_convert_results( mongo_get_data(&coll, filter) ) )
+    }
+
+    /** Remove all data from mapping tree */
+    pub fn remove_full<S>(
+        composer_config: &ComposerConfig,
+        db_pool: Arc<RwLock<Client>>,
+        app_type: S,
+    )
+        -> Result<(), ApiError>
+            where S: Into<String> + Hash + Eq, String: Borrow<S>
+    {
+        let app_type = app_type.into();  // Нужно оптимизировать тип!
+        db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type ).drop( None ) ?;
+        Ok( () )
     }
 }
 
