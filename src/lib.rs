@@ -5,8 +5,8 @@ pub extern crate data_getter;
 use std::ffi::OsStr;
 use std::hash::Hash;
 use std::path::Path;
-use std::sync::RwLock;
 use std::borrow::Borrow;
+use std::sync::{Arc, RwLock};
 
 use mongodb::sync::Client;
 use serde_json::Value as SerdeJsonValue;
@@ -35,7 +35,7 @@ impl ComposerApi {
     pub fn get_full<S, K, P>(
         composer_config: &ComposerConfig,
         app_type: S,
-        db_pool: RwLock<Client>,
+        db_pool: Arc<RwLock<Client>>,
         access_key: &[K],
         update: Option<bool>,
         filter: Option<&SerdeJsonValue>,
