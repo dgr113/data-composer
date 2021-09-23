@@ -6,8 +6,9 @@ use std::ffi::OsStr;
 use std::hash::Hash;
 use std::path::Path;
 use std::borrow::Borrow;
+use std::sync::{Arc, RwLock};
 
-use mongodb::sync::Collection;
+use mongodb::sync::Client;
 use serde_json::Value as SerdeJsonValue;
 
 pub mod core;
@@ -34,7 +35,8 @@ impl ComposerApi {
     pub fn get_full<S, K, P>(
         composer_config: &ComposerConfig,
         app_type: S,
-        coll: &Collection,
+        // coll: &Collection,
+        db_pool: Arc<RwLock<Client>>,
         access_key: &[K],
         update: Option<bool>,
         filter: Option<&SerdeJsonValue>,
@@ -46,7 +48,9 @@ impl ComposerApi {
                   K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
-        let result = ComposerIntro::get_full(composer_config, coll, update, filter, id_key, app_type, tree_path, access_key) ?;
+        let app_type = app_type.into();
+        let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );  // ПРОВЕРИТЬ ПУЛ СОЕДИНЕНИЯ С БД !
+        let result = ComposerIntro::get_full(composer_config, &coll, update, filter, id_key, app_type, tree_path, access_key) ?;
         Ok( result )
     }
 
