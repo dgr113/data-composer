@@ -7,6 +7,7 @@ use std::borrow::Borrow;
 use bson::Document;
 use mongodb::sync::Collection;
 use mongodb::options::DropCollectionOptions;
+use rayon::prelude::*;
 
 use data_finder::config::FinderConfig;
 use data_getter::{ ResultParse, GetterConfig };
@@ -118,14 +119,28 @@ impl ComposerBuild {
         Self::prepare_external_data( &data_getter_result )
             .ok_or(  ApiError::GetterApiError( "Error external data convert!".to_string() ) )
             .and_then( |arr| {
-                // Creating an vector of only successful conversion results to a <Document>
-                let mut docs = vec![];
-                for d in arr {
-                    match prepare_to_doc(Some( d ), id_key) {
-                        Some( v ) => docs.push( v ),
-                        None => eprintln!("Error with Mongo document conversion data: {:?}", d)
-                    }
-                }
+                // // Creating an vector of only successful conversion results to a <Document> (stable sync version)
+                // let mut docs = vec![];
+                // for d in arr {
+                //     match prepare_to_doc(Some( d ), id_key) {
+                //         Some( v ) => docs.push( v ),
+                //         None => eprintln!("Error with Mongo document conversion data: {:?}", d)
+                //     }
+                // }
+
+                // Creating an vector of only successful conversion results to a <Document> (experimental parallel version)
+                let docs: Vec<Document> = arr.par_iter()
+                    .map( |v| prepare_to_doc(Some(v), id_key) )
+                    .filter( |d| {
+                        if d.is_some() { true }
+                        else {
+                            eprintln!("Error with Mongo document conversion data: {:?}", d);
+                            false
+                        }
+                    })
+                    .map( |d| d.unwrap() )
+                    .collect();
+
                 // Insert correct BSON documents into database
                 let res = coll.insert_many(docs, None)
                     .map_err( |_| ApiError::GetterApiError( "Error write doc into Mongo!".to_string() ) );
