@@ -4,6 +4,7 @@ use std::fmt::{ Display, Formatter, Result as FmtResult };
 use serde::{ Serialize, Deserialize };
 use serde_json::Error as SerdeJsonError;
 use serde_yaml::Error as SerdeYamlError;
+use mongodb::error::Error as MongoError;
 use data_finder::errors::ApiError as FinderApiError;
 use data_getter::errors::ApiError as GetterApiError;
 
@@ -19,6 +20,7 @@ pub enum ApiError {
     ConfigError( String ),
     FinderApiError( String ),
     GetterApiError( String ),
+    MongoError( String ),
     IndexError
 }
 
@@ -35,6 +37,11 @@ impl From<SerdeYamlError> for ApiError {
 impl From<IOError> for ApiError {
     fn from( err: IOError ) -> ApiError {
         ApiError::IOError( err.to_string() )
+    }
+}
+impl From<MongoError> for ApiError {
+    fn from( err: MongoError ) -> ApiError {
+        ApiError::MongoError( err.to_string() )
     }
 }
 impl From<FinderApiError> for ApiError {
@@ -58,6 +65,7 @@ impl Display for ApiError {
             Self::SerdeError( t ) => format!("SessionDependencyError: {}", t.to_string()),
             Self::FinderApiError( t ) => format!("FinderApiError: {}", t.to_string()),
             Self::GetterApiError( t ) => format!("GetterApiError: {}", t.to_string()),
+            Self::MongoError( t ) => format!("MongoError: {}", t.to_string()),
             Self::IndexError => format!( "IndexGettingError" )
         };
         write!(f, "{}", msg)

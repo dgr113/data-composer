@@ -18,7 +18,6 @@ use data_finder::config::FinderConfig;
 
 pub use crate::errors::ApiError;
 pub use crate::config::ComposerConfig;
-pub use crate::core::config_utils::Params;
 pub use crate::core::functions::ComposerIntro;
 
 

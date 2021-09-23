@@ -1,6 +1,6 @@
 [package]
 name = "data-composer"
-version = "1.0.9"
+version = "1.1.0"
 authors = ["pewpew79 <grigoriev.d3@mail.ru>"]
 edition = "2018"
 

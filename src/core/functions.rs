@@ -6,11 +6,10 @@ use std::borrow::Borrow;
 
 use bson::Document;
 use mongodb::sync::Collection;
-use mongodb::options::DropCollectionOptions;
 use rayon::prelude::*;
 
+use data_getter::GetterConfig;
 use data_finder::config::FinderConfig;
-use data_getter::{ ResultParse, GetterConfig };
 
 use crate::errors::ApiError;
 use crate::config::ComposerConfig;
@@ -53,15 +52,15 @@ impl ComposerIntro {
         tree_path: P,
         access_key: &[K]
     )
-        -> ResultParse<Vec<serde_json::Value>>
+        -> Result<Vec<serde_json::Value>, ApiError>
             where S: Into<String> + Hash + Eq, String: Borrow<S>,
                   K: Into<String> + Hash + Eq + serde_yaml::Index, String: Borrow<K>,
                   P: AsRef<Path> + AsRef<OsStr>
     {
         let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
         if update.unwrap_or( false ) {
-            // let drop_coll_opts = DropCollectionOptions::default();
-            coll.drop( None ).unwrap();
+            // coll.drop( None ).unwrap();
+            coll.drop( None ) ?;
         }
         if !check_coll_exists( coll ) {
             if ComposerBuild::get_updated_full(composer_config, coll, id_key, app_type, tree_path, access_key).is_err() {
