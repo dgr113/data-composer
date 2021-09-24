@@ -68,9 +68,9 @@ impl ComposerIntro {
         let app_type = app_type.into();  // Нужно оптимизировать тип!
         let filter = prepare_to_doc(filter, None).unwrap_or( Document::new() );
 
-        let coll = db_pool.read().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
+        let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );  // TESTING !
         if !check_coll_exists( &coll ) {
-            let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
+            // let coll = db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type );
             if ComposerBuild::get_updated_full(composer_config, &coll, id_key, app_type, tree_path, access_key).is_err() {
                 println!("Error with update assets data!")
             };
