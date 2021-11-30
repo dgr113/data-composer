@@ -19,7 +19,6 @@ use rayon::prelude::*;
 
 use data_getter::GetterConfig;
 use data_finder::config::FinderConfig;
-use mongodb::options::DropDatabaseOptions;
 
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
@@ -87,7 +86,7 @@ impl ComposerIntro {
         // Нужно оптимизировать тип для обработки `app_type` !
         match app_type {
             Some( app_type ) => db.collection( &app_type.into() ).drop( None ) ?,
-            None => db.drop( DropDatabaseOptions::default() ) ?
+            None => db.drop( None ) ?
         }
         Ok( () )
     }
