@@ -19,6 +19,7 @@ use rayon::prelude::*;
 
 use data_getter::GetterConfig;
 use data_finder::config::FinderConfig;
+use mongodb::options::DropDatabaseOptions;
 
 use crate::core::io_utils::{ dump_yaml, parse_yaml };
 use crate::core::storage_utils::{ check_coll_exists, mongo_get_data, mongo_convert_results, prepare_to_doc };
@@ -79,16 +80,15 @@ impl ComposerIntro {
     }
 
     /** Remove all data from mapping tree */
-    pub fn remove_full<S>(
-        composer_config: &ComposerConfig,
-        db_pool: Arc<RwLock<Client>>,
-        app_type: S,
-    )
-        -> Result<(), ApiError>
+    pub fn remove_full<S>(composer_config: &ComposerConfig, db_pool: Arc<RwLock<Client>>, app_type: Option<S>) -> Result<(), ApiError>
         where S: Into<String> + Hash + Eq, String: Borrow<S>
     {
-        let app_type = app_type.into();  // Нужно оптимизировать тип!
-        db_pool.write().unwrap().database( &composer_config.database.db_name ).collection( &app_type ).drop( None ) ?;
+        let db = db_pool.write().unwrap().database( &composer_config.database.db_name );
+        // Нужно оптимизировать тип для обработки `app_type` !
+        match app_type {
+            Some( app_type ) => db.collection( &app_type.into() ).drop( None ) ?,
+            None => db.drop( DropDatabaseOptions::default() ) ?
+        }
         Ok( () )
     }
 }
@@ -152,9 +152,10 @@ impl ComposerBuild {
                 // Creating an vector of only successful conversion results to a <Document> (experimental parallel version)
                 let docs: Vec<Document> = arr.par_iter()
                     .map( |v| prepare_to_doc(Some(v), id_key) )
-                    .filter( |d| {
-                        if d.is_some() { true }
-                        else {
+                    .filter( |d: _| {
+                        if d.is_some() {
+                            true
+                        } else {
                             eprintln!("Error with Mongo document conversion data: {:?}", d);
                             false
                         }
